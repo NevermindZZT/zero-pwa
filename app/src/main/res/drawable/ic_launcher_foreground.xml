@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 桌面窗口与外发光效果 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,28h48c3.3,0 6,2.7 6,6v40c0,3.3 -2.7,6 -6,6H30c-3.3,0 -6,-2.7 -6,-6V34C24,30.7 26.7,28 30,28z" />
+    <path
+        android:fillColor="#1A73E8"
+        android:pathData="M24,38h60v4H24z" />
+    <!-- 窗口控制三点 -->
+    <path
+        android:fillColor="#EA4335"
+        android:pathData="M32,33m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0" />
+    <path
+        android:fillColor="#FBBC05"
+        android:pathData="M38,33m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0" />
+    <path
+        android:fillColor="#34A853"
+        android:pathData="M44,33m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0" />
+    <!-- 闪电/PWA 符号 -->
+    <path
+        android:fillColor="#1A73E8"
+        android:pathData="M56,46l-9,12h7l-3,12 11,-14h-7z" />
+</vector>

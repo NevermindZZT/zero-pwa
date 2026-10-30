@@ -1,0 +1,25 @@
+*.iml
+.gradle/
+.gradle-home/
+.xdg-data/
+.kotlin/
+.android/
+local.properties
+.idea/
+.DS_Store
+build/
+*/build/
+**/build/
+captures/
+.externalNativeBuild
+.cxx
+.sdk/
+*.apk
+*.aab
+# Keystore signing files & credentials
+*.jks
+*.keystore
+*.jceks
+keystore.properties
+keystore/release.jks
+keystore/keystore.properties
