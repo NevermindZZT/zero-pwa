@@ -14,6 +14,7 @@ data class PwaItem(
     val displayMode: String = DISPLAY_STANDALONE,
     val orientation: String = ORIENTATION_ANY,
     val userAgentMode: Int = UA_DEFAULT,
+    val statusBarIconMode: Int = STATUS_BAR_ICON_AUTO,
     val enableJavaScript: Boolean = true,
     val enableDomStorage: Boolean = true,
     val enableImmersiveStatusBar: Boolean = true,
@@ -45,5 +46,9 @@ data class PwaItem(
         const val UA_DEFAULT = 0
         const val UA_MOBILE = 1
         const val UA_DESKTOP = 2
+
+        const val STATUS_BAR_ICON_AUTO = 0
+        const val STATUS_BAR_ICON_DARK = 1
+        const val STATUS_BAR_ICON_LIGHT = 2
     }
 }

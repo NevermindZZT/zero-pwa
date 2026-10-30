@@ -77,6 +77,7 @@ fun AddPwaDialog(
         customThemeColor: Int?,
         displayMode: String,
         userAgentMode: Int,
+        statusBarIconMode: Int,
         enableImmersiveStatusBar: Boolean,
         allowMultipleWindows: Boolean,
         openExternalInBrowser: Boolean,
@@ -92,6 +93,7 @@ fun AddPwaDialog(
     var selectedThemeColor by remember { mutableStateOf<Int?>(null) }
     var selectedDisplayMode by remember { mutableStateOf(PwaItem.DISPLAY_STANDALONE) }
     var selectedUaMode by remember { mutableIntStateOf(PwaItem.UA_DEFAULT) }
+    var selectedIconMode by remember { mutableIntStateOf(PwaItem.STATUS_BAR_ICON_AUTO) }
     var enableImmersive by remember { mutableStateOf(true) }
     var allowMultipleWindows by remember { mutableStateOf(false) }
     var openExternal by remember { mutableStateOf(true) }
@@ -398,6 +400,46 @@ fun AddPwaDialog(
                             }
                         }
 
+                        // 状态栏图标与文字风格
+                        Column {
+                            Text(
+                                text = "状态栏文字与图标风格",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                FilterChip(
+                                    selected = selectedIconMode == PwaItem.STATUS_BAR_ICON_AUTO,
+                                    onClick = { selectedIconMode = PwaItem.STATUS_BAR_ICON_AUTO },
+                                    label = { Text("智能适配") },
+                                    leadingIcon = if (selectedIconMode == PwaItem.STATUS_BAR_ICON_AUTO) {
+                                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    } else null
+                                )
+                                FilterChip(
+                                    selected = selectedIconMode == PwaItem.STATUS_BAR_ICON_DARK,
+                                    onClick = { selectedIconMode = PwaItem.STATUS_BAR_ICON_DARK },
+                                    label = { Text("深色字 (黑)") },
+                                    leadingIcon = if (selectedIconMode == PwaItem.STATUS_BAR_ICON_DARK) {
+                                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    } else null
+                                )
+                                FilterChip(
+                                    selected = selectedIconMode == PwaItem.STATUS_BAR_ICON_LIGHT,
+                                    onClick = { selectedIconMode = PwaItem.STATUS_BAR_ICON_LIGHT },
+                                    label = { Text("浅色字 (白)") },
+                                    leadingIcon = if (selectedIconMode == PwaItem.STATUS_BAR_ICON_LIGHT) {
+                                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    } else null
+                                )
+                            }
+                        }
+
                         // 高级功能开关
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -475,6 +517,7 @@ fun AddPwaDialog(
                             selectedThemeColor,
                             selectedDisplayMode,
                             selectedUaMode,
+                            selectedIconMode,
                             enableImmersive,
                             allowMultipleWindows,
                             openExternal,

@@ -57,6 +57,7 @@ fun EditPwaDialog(
     var themeColor by remember { mutableStateOf<Int?>(pwa.themeColor) }
     var displayMode by remember { mutableStateOf(pwa.displayMode) }
     var userAgentMode by remember { mutableIntStateOf(pwa.userAgentMode) }
+    var iconMode by remember { mutableIntStateOf(pwa.statusBarIconMode) }
     var enableImmersive by remember { mutableStateOf(pwa.enableImmersiveStatusBar) }
     var allowMultipleWindows by remember { mutableStateOf(pwa.allowMultipleWindows) }
     var openExternal by remember { mutableStateOf(pwa.openExternalLinksInBrowser) }
@@ -201,6 +202,46 @@ fun EditPwaDialog(
                 }
             }
 
+            // 状态栏图标与文字风格
+            Column {
+                Text(
+                    text = "状态栏文字与图标风格",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = iconMode == PwaItem.STATUS_BAR_ICON_AUTO,
+                        onClick = { iconMode = PwaItem.STATUS_BAR_ICON_AUTO },
+                        label = { Text("智能适配") },
+                        leadingIcon = if (iconMode == PwaItem.STATUS_BAR_ICON_AUTO) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null
+                    )
+                    FilterChip(
+                        selected = iconMode == PwaItem.STATUS_BAR_ICON_DARK,
+                        onClick = { iconMode = PwaItem.STATUS_BAR_ICON_DARK },
+                        label = { Text("深色字 (黑)") },
+                        leadingIcon = if (iconMode == PwaItem.STATUS_BAR_ICON_DARK) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null
+                    )
+                    FilterChip(
+                        selected = iconMode == PwaItem.STATUS_BAR_ICON_LIGHT,
+                        onClick = { iconMode = PwaItem.STATUS_BAR_ICON_LIGHT },
+                        label = { Text("浅色字 (白)") },
+                        leadingIcon = if (iconMode == PwaItem.STATUS_BAR_ICON_LIGHT) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null
+                    )
+                }
+            }
+
             // 开关卡片
             Surface(
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -277,6 +318,7 @@ fun EditPwaDialog(
                             themeColor = themeColor,
                             displayMode = displayMode,
                             userAgentMode = userAgentMode,
+                            statusBarIconMode = iconMode,
                             enableImmersiveStatusBar = enableImmersive,
                             allowMultipleWindows = allowMultipleWindows,
                             openExternalLinksInBrowser = openExternal,

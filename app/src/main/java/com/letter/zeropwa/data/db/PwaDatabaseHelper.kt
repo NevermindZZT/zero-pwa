@@ -26,6 +26,7 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
                 $COL_DISPLAY_MODE TEXT NOT NULL DEFAULT 'standalone',
                 $COL_ORIENTATION TEXT NOT NULL DEFAULT 'any',
                 $COL_USER_AGENT_MODE INTEGER NOT NULL DEFAULT 0,
+                $COL_STATUS_BAR_ICON_MODE INTEGER NOT NULL DEFAULT 0,
                 $COL_ENABLE_IMMERSIVE_STATUS_BAR INTEGER NOT NULL DEFAULT 1,
                 $COL_ALLOW_MULTIPLE_WINDOWS INTEGER NOT NULL DEFAULT 0,
                 $COL_OPEN_EXTERNAL_IN_BROWSER INTEGER NOT NULL DEFAULT 1,
@@ -44,6 +45,11 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
             } catch (_: Exception) {}
             try {
                 db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_ALLOW_MULTIPLE_WINDOWS INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+        }
+        if (oldVersion < 3) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_STATUS_BAR_ICON_MODE INTEGER NOT NULL DEFAULT 0")
             } catch (_: Exception) {}
         }
     }
@@ -133,6 +139,7 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
             put(COL_DISPLAY_MODE, displayMode)
             put(COL_ORIENTATION, orientation)
             put(COL_USER_AGENT_MODE, userAgentMode)
+            put(COL_STATUS_BAR_ICON_MODE, statusBarIconMode)
             put(COL_ENABLE_IMMERSIVE_STATUS_BAR, if (enableImmersiveStatusBar) 1 else 0)
             put(COL_ALLOW_MULTIPLE_WINDOWS, if (allowMultipleWindows) 1 else 0)
             put(COL_OPEN_EXTERNAL_IN_BROWSER, if (openExternalLinksInBrowser) 1 else 0)
@@ -156,6 +163,7 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
         val displayMode = getString(getColumnIndexOrThrow(COL_DISPLAY_MODE))
         val orientation = getString(getColumnIndexOrThrow(COL_ORIENTATION))
         val userAgentMode = getInt(getColumnIndexOrThrow(COL_USER_AGENT_MODE))
+        val iconMode = getIntOrNull(getColumnIndex(COL_STATUS_BAR_ICON_MODE)) ?: PwaItem.STATUS_BAR_ICON_AUTO
         val enableImmersive = getIntOrNull(getColumnIndex(COL_ENABLE_IMMERSIVE_STATUS_BAR))?.let { it == 1 } ?: true
         val allowMultiple = getIntOrNull(getColumnIndex(COL_ALLOW_MULTIPLE_WINDOWS))?.let { it == 1 } ?: false
         val openExternalInBrowser = getInt(getColumnIndexOrThrow(COL_OPEN_EXTERNAL_IN_BROWSER)) == 1
@@ -177,6 +185,7 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
             displayMode = displayMode,
             orientation = orientation,
             userAgentMode = userAgentMode,
+            statusBarIconMode = iconMode,
             enableImmersiveStatusBar = enableImmersive,
             allowMultipleWindows = allowMultiple,
             openExternalLinksInBrowser = openExternalInBrowser,
@@ -196,7 +205,7 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
 
     companion object {
         const val DATABASE_NAME = "zero_pwa.db"
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 3
 
         const val TABLE_NAME = "pwa_items"
         const val COL_ID = "id"
@@ -212,6 +221,7 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
         const val COL_DISPLAY_MODE = "display_mode"
         const val COL_ORIENTATION = "orientation"
         const val COL_USER_AGENT_MODE = "user_agent_mode"
+        const val COL_STATUS_BAR_ICON_MODE = "status_bar_icon_mode"
         const val COL_ENABLE_IMMERSIVE_STATUS_BAR = "enable_immersive_status_bar"
         const val COL_ALLOW_MULTIPLE_WINDOWS = "allow_multiple_windows"
         const val COL_OPEN_EXTERNAL_IN_BROWSER = "open_external_in_browser"

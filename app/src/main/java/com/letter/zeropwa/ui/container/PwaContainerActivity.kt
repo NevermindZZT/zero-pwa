@@ -309,12 +309,30 @@ fun PwaContainerScreen(
     val effectiveColorInt = currentPwa.themeColor ?: dynamicThemeColor ?: MaterialTheme.colorScheme.surface.toArgb()
     val statusBarComposeColor = Color(effectiveColorInt)
 
-    DisposableEffect(effectiveColorInt) {
+    var sampledTopIsLight by remember { mutableStateOf<Boolean?>(null) }
+
+    // 状态栏图标与文字深浅色智能自适应裁决：
+    val isLightStatusBars = when (currentPwa.statusBarIconMode) {
+        PwaItem.STATUS_BAR_ICON_DARK -> true  // 强制深色文字 (黑字，适合浅色页面/浅色地图)
+        PwaItem.STATUS_BAR_ICON_LIGHT -> false // 强制浅色文字 (白字，适合暗黑夜间页面)
+        else -> {
+            // AUTO 自动智能模式：
+            if (currentPwa.enableImmersiveStatusBar) {
+                // 沉浸穿透模式：网页内容直接处于状态栏正下方
+                // 优先使用页面顶部像素动态采样结果；未采样完成前优先默认深色字 (绝大多数现代网页/地图均为白底浅色 UI)
+                sampledTopIsLight ?: currentPwa.backgroundColor?.let { ColorUtils.calculateLuminance(it) > 0.5 } ?: true
+            } else {
+                // 安全区隔离模式：根据状态栏着色条自身色彩亮度自适应反转
+                ColorUtils.calculateLuminance(effectiveColorInt) > 0.5
+            }
+        }
+    }
+
+    DisposableEffect(isLightStatusBars) {
         val window = (context as? Activity)?.window
         if (window != null) {
             val controller = WindowCompat.getInsetsController(window, window.decorView)
-            val isLight = ColorUtils.calculateLuminance(effectiveColorInt) > 0.5
-            controller.isAppearanceLightStatusBars = isLight
+            controller.isAppearanceLightStatusBars = isLightStatusBars
         }
         onDispose {}
     }
@@ -497,6 +515,35 @@ fun PwaContainerScreen(
                                                 val parsed = PwaManifestParser.parseColorSafely(cleanColor)
                                                 if (parsed != null) {
                                                     dynamicThemeColor = parsed
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // 沉浸穿透模式下：智能采样网页顶部视口真实背景色与亮度，自动适配状态栏文字黑白
+                                    if (currentPwa.enableImmersiveStatusBar && currentPwa.statusBarIconMode == PwaItem.STATUS_BAR_ICON_AUTO) {
+                                        val sampleJs = """
+                                            (function() {
+                                                try {
+                                                    var el = document.elementFromPoint(window.innerWidth / 2, 20);
+                                                    while (el && el !== document.documentElement) {
+                                                        var s = window.getComputedStyle(el);
+                                                        var bg = s.backgroundColor;
+                                                        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return bg;
+                                                        el = el.parentElement;
+                                                    }
+                                                    var bodyBg = window.getComputedStyle(document.body).backgroundColor;
+                                                    if (bodyBg && bodyBg !== 'transparent' && bodyBg !== 'rgba(0, 0, 0, 0)') return bodyBg;
+                                                    return '';
+                                                } catch(e) { return ''; }
+                                            })()
+                                        """.trimIndent()
+                                        evaluateJavascript(sampleJs) { sampledVal ->
+                                            val clean = sampledVal?.replace("\"", "")?.trim()
+                                            if (!clean.isNullOrBlank()) {
+                                                val parsed = PwaManifestParser.parseColorSafely(clean)
+                                                if (parsed != null) {
+                                                    sampledTopIsLight = ColorUtils.calculateLuminance(parsed) > 0.5
                                                 }
                                             }
                                         }
