@@ -67,6 +67,7 @@ fun PwaActionBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var isPinned by remember(pwa.id, pwa.isPinnedToShortcuts) { mutableStateOf(pwa.isPinnedToShortcuts) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -182,11 +183,15 @@ fun PwaActionBottomSheet(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                         )
 
-                        // 置顶到长按菜单 (带 Switch 开关)
+                        // 置顶到长按菜单 (带 Switch 开关与即时状态响应)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onToggleShortcut() }
+                                .clickable {
+                                    val next = !isPinned
+                                    isPinned = next
+                                    onToggleShortcut()
+                                }
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -212,14 +217,17 @@ fun PwaActionBottomSheet(
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = if (pwa.isPinnedToShortcuts) "已在桌面长按快捷菜单中置顶" else "长按主图标直接呼出该 PWA",
+                                    text = if (isPinned) "已在桌面长按快捷菜单中置顶" else "长按主图标直接呼出该 PWA",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Switch(
-                                checked = pwa.isPinnedToShortcuts,
-                                onCheckedChange = { onToggleShortcut() }
+                                checked = isPinned,
+                                onCheckedChange = { next ->
+                                    isPinned = next
+                                    onToggleShortcut()
+                                }
                             )
                         }
 

@@ -165,7 +165,10 @@ fun HomeScreen(
     }
 
     // Material 3 原生操作底栏 (彻底取代旧式系统的 DropdownMenu)
-    selectedActionPwa?.let { pwa ->
+    val activeActionPwa = selectedActionPwa?.let { selected ->
+        pwaList.find { it.id == selected.id } ?: selected
+    }
+    activeActionPwa?.let { pwa ->
         PwaActionBottomSheet(
             pwa = pwa,
             onLaunch = { viewModel.launchPwa(context, pwa.id, pwa.allowMultipleWindows) },
