@@ -74,6 +74,7 @@ fun AddPwaDialog(
     onConfirmAdd: (
         candidate: PwaCandidate,
         name: String,
+        customThemeColor: Int?,
         displayMode: String,
         userAgentMode: Int,
         openExternalInBrowser: Boolean,
@@ -86,6 +87,7 @@ fun AddPwaDialog(
     var urlInput by remember { mutableStateOf("") }
 
     var editableName by remember { mutableStateOf("") }
+    var selectedThemeColor by remember { mutableStateOf<Int?>(null) }
     var selectedDisplayMode by remember { mutableStateOf(PwaItem.DISPLAY_STANDALONE) }
     var selectedUaMode by remember { mutableIntStateOf(PwaItem.UA_DEFAULT) }
     var openExternal by remember { mutableStateOf(true) }
@@ -208,6 +210,7 @@ fun AddPwaDialog(
                 if (editableName.isBlank()) {
                     editableName = candidate.name
                     selectedDisplayMode = candidate.displayMode
+                    selectedThemeColor = candidate.themeColor
                 }
 
                 // 网站信息预览卡片 (遵循 Material You 无阴影色调规范)
@@ -272,7 +275,7 @@ fun AddPwaDialog(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1
                                 )
-                                if (candidate.themeColor != null) {
+                                if (selectedThemeColor != null) {
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Surface(
                                         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -286,11 +289,11 @@ fun AddPwaDialog(
                                                 modifier = Modifier
                                                     .size(10.dp)
                                                     .clip(CircleShape)
-                                                    .background(Color(candidate.themeColor))
+                                                    .background(Color(selectedThemeColor!!))
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = "提取主题色",
+                                                text = if (selectedThemeColor == candidate.themeColor) "提取主题色" else "自定义主题色",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -310,6 +313,13 @@ fun AddPwaDialog(
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // 主题色手动选择与微调
+                        ThemeColorPickerSection(
+                            selectedColor = selectedThemeColor,
+                            extractedColor = candidate.themeColor,
+                            onColorChanged = { selectedThemeColor = it }
                         )
 
                         // 显示模式选择（Chip 胶囊式）
@@ -430,6 +440,7 @@ fun AddPwaDialog(
                         onConfirmAdd(
                             candidate,
                             editableName.ifBlank { candidate.name },
+                            selectedThemeColor,
                             selectedDisplayMode,
                             selectedUaMode,
                             openExternal,

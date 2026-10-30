@@ -168,10 +168,11 @@ fun HomeScreen(
         AddPwaDialog(
             inspectState = inspectState,
             onInspect = { url -> viewModel.inspectUrl(url) },
-            onConfirmAdd = { candidate, name, displayMode, uaMode, openExt, isPinned ->
+            onConfirmAdd = { candidate, name, customColor, displayMode, uaMode, openExt, isPinned ->
                 viewModel.savePwa(
                     candidate = candidate,
                     customName = name,
+                    customThemeColor = customColor,
                     displayMode = displayMode,
                     userAgentMode = uaMode,
                     openExternalInBrowser = openExt,

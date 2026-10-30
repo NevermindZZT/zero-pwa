@@ -57,6 +57,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun savePwa(
         candidate: PwaCandidate,
         customName: String? = null,
+        customThemeColor: Int? = null,
         displayMode: String = "standalone",
         userAgentMode: Int = 0,
         openExternalInBrowser: Boolean = true,
@@ -71,7 +72,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 scope = candidate.scope,
                 iconPath = null,
                 iconUrl = candidate.iconUrl,
-                themeColor = candidate.themeColor,
+                themeColor = customThemeColor ?: candidate.themeColor,
                 backgroundColor = candidate.backgroundColor,
                 displayMode = displayMode,
                 orientation = candidate.orientation,

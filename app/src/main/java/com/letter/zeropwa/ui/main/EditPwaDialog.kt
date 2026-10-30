@@ -54,6 +54,7 @@ fun EditPwaDialog(
 
     var name by remember { mutableStateOf(pwa.name) }
     var startUrl by remember { mutableStateOf(pwa.startUrl) }
+    var themeColor by remember { mutableStateOf<Int?>(pwa.themeColor) }
     var displayMode by remember { mutableStateOf(pwa.displayMode) }
     var userAgentMode by remember { mutableIntStateOf(pwa.userAgentMode) }
     var openExternal by remember { mutableStateOf(pwa.openExternalLinksInBrowser) }
@@ -117,6 +118,13 @@ fun EditPwaDialog(
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            // 主题颜色修改
+            ThemeColorPickerSection(
+                selectedColor = themeColor,
+                extractedColor = null,
+                onColorChanged = { themeColor = it }
             )
 
             // 运行模式 Chip
@@ -236,6 +244,7 @@ fun EditPwaDialog(
                         pwa.copy(
                             name = name.ifBlank { pwa.name },
                             startUrl = startUrl.ifBlank { pwa.startUrl },
+                            themeColor = themeColor,
                             displayMode = displayMode,
                             userAgentMode = userAgentMode,
                             openExternalLinksInBrowser = openExternal,

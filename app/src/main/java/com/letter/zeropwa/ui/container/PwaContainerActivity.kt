@@ -290,8 +290,8 @@ fun PwaContainerScreen(
         return
     }
 
-    // 计算状态栏颜色并动态调整系统状态栏文字明暗
-    val effectiveColorInt = dynamicThemeColor ?: currentPwa.themeColor ?: MaterialTheme.colorScheme.surface.toArgb()
+    // 计算状态栏颜色：用户手动配置的主题色具备最高优先级，其次使用网页动态提取色，最后回退系统色
+    val effectiveColorInt = currentPwa.themeColor ?: dynamicThemeColor ?: MaterialTheme.colorScheme.surface.toArgb()
     val statusBarComposeColor = Color(effectiveColorInt)
 
     DisposableEffect(effectiveColorInt) {
@@ -468,15 +468,17 @@ fun PwaContainerScreen(
                                 onPageFinishedListener = { url ->
                                     currentUrl = url
                                     isLoading = false
-                                    // 尝试提取页面动态更新的 theme-color
-                                    evaluateJavascript(
-                                        "(function() { var meta = document.querySelector('meta[name=theme-color]'); return meta ? meta.getAttribute('content') : ''; })()"
-                                    ) { colorValue ->
-                                        val cleanColor = colorValue?.replace("\"", "")?.trim()
-                                        if (!cleanColor.isNullOrBlank()) {
-                                            val parsed = PwaManifestParser.parseColorSafely(cleanColor)
-                                            if (parsed != null) {
-                                                dynamicThemeColor = parsed
+                                    // 仅当用户未显式设置主题色时，才尝试提取页面动态更新的 theme-color
+                                    if (currentPwa.themeColor == null) {
+                                        evaluateJavascript(
+                                            "(function() { var meta = document.querySelector('meta[name=theme-color]'); return meta ? meta.getAttribute('content') : ''; })()"
+                                        ) { colorValue ->
+                                            val cleanColor = colorValue?.replace("\"", "")?.trim()
+                                            if (!cleanColor.isNullOrBlank()) {
+                                                val parsed = PwaManifestParser.parseColorSafely(cleanColor)
+                                                if (parsed != null) {
+                                                    dynamicThemeColor = parsed
+                                                }
                                             }
                                         }
                                     }
