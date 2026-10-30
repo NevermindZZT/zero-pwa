@@ -26,6 +26,8 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
                 $COL_DISPLAY_MODE TEXT NOT NULL DEFAULT 'standalone',
                 $COL_ORIENTATION TEXT NOT NULL DEFAULT 'any',
                 $COL_USER_AGENT_MODE INTEGER NOT NULL DEFAULT 0,
+                $COL_ENABLE_IMMERSIVE_STATUS_BAR INTEGER NOT NULL DEFAULT 1,
+                $COL_ALLOW_MULTIPLE_WINDOWS INTEGER NOT NULL DEFAULT 0,
                 $COL_OPEN_EXTERNAL_IN_BROWSER INTEGER NOT NULL DEFAULT 1,
                 $COL_IS_PINNED_SHORTCUT INTEGER NOT NULL DEFAULT 0,
                 $COL_LAST_OPENED_AT INTEGER NOT NULL DEFAULT 0,
@@ -36,7 +38,14 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // 后续版本迁移逻辑
+        if (oldVersion < 2) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_ENABLE_IMMERSIVE_STATUS_BAR INTEGER NOT NULL DEFAULT 1")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_ALLOW_MULTIPLE_WINDOWS INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+        }
     }
 
     fun insert(item: PwaItem): Long {
@@ -124,6 +133,8 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
             put(COL_DISPLAY_MODE, displayMode)
             put(COL_ORIENTATION, orientation)
             put(COL_USER_AGENT_MODE, userAgentMode)
+            put(COL_ENABLE_IMMERSIVE_STATUS_BAR, if (enableImmersiveStatusBar) 1 else 0)
+            put(COL_ALLOW_MULTIPLE_WINDOWS, if (allowMultipleWindows) 1 else 0)
             put(COL_OPEN_EXTERNAL_IN_BROWSER, if (openExternalLinksInBrowser) 1 else 0)
             put(COL_IS_PINNED_SHORTCUT, if (isPinnedToShortcuts) 1 else 0)
             put(COL_LAST_OPENED_AT, lastOpenedAt)
@@ -145,6 +156,8 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
         val displayMode = getString(getColumnIndexOrThrow(COL_DISPLAY_MODE))
         val orientation = getString(getColumnIndexOrThrow(COL_ORIENTATION))
         val userAgentMode = getInt(getColumnIndexOrThrow(COL_USER_AGENT_MODE))
+        val enableImmersive = getIntOrNull(getColumnIndex(COL_ENABLE_IMMERSIVE_STATUS_BAR))?.let { it == 1 } ?: true
+        val allowMultiple = getIntOrNull(getColumnIndex(COL_ALLOW_MULTIPLE_WINDOWS))?.let { it == 1 } ?: false
         val openExternalInBrowser = getInt(getColumnIndexOrThrow(COL_OPEN_EXTERNAL_IN_BROWSER)) == 1
         val isPinnedShortcut = getInt(getColumnIndexOrThrow(COL_IS_PINNED_SHORTCUT)) == 1
         val lastOpenedAt = getLong(getColumnIndexOrThrow(COL_LAST_OPENED_AT))
@@ -164,6 +177,8 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
             displayMode = displayMode,
             orientation = orientation,
             userAgentMode = userAgentMode,
+            enableImmersiveStatusBar = enableImmersive,
+            allowMultipleWindows = allowMultiple,
             openExternalLinksInBrowser = openExternalInBrowser,
             isPinnedToShortcuts = isPinnedShortcut,
             lastOpenedAt = lastOpenedAt,
@@ -172,16 +187,16 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
     }
 
     private fun Cursor.getStringOrNull(columnIndex: Int): String? {
-        return if (isNull(columnIndex)) null else getString(columnIndex)
+        return if (columnIndex < 0 || isNull(columnIndex)) null else getString(columnIndex)
     }
 
     private fun Cursor.getIntOrNull(columnIndex: Int): Int? {
-        return if (isNull(columnIndex)) null else getInt(columnIndex)
+        return if (columnIndex < 0 || isNull(columnIndex)) null else getInt(columnIndex)
     }
 
     companion object {
         const val DATABASE_NAME = "zero_pwa.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
 
         const val TABLE_NAME = "pwa_items"
         const val COL_ID = "id"
@@ -197,6 +212,8 @@ class PwaDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
         const val COL_DISPLAY_MODE = "display_mode"
         const val COL_ORIENTATION = "orientation"
         const val COL_USER_AGENT_MODE = "user_agent_mode"
+        const val COL_ENABLE_IMMERSIVE_STATUS_BAR = "enable_immersive_status_bar"
+        const val COL_ALLOW_MULTIPLE_WINDOWS = "allow_multiple_windows"
         const val COL_OPEN_EXTERNAL_IN_BROWSER = "open_external_in_browser"
         const val COL_IS_PINNED_SHORTCUT = "is_pinned_shortcut"
         const val COL_LAST_OPENED_AT = "last_opened_at"

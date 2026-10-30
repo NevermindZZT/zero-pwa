@@ -57,6 +57,8 @@ fun EditPwaDialog(
     var themeColor by remember { mutableStateOf<Int?>(pwa.themeColor) }
     var displayMode by remember { mutableStateOf(pwa.displayMode) }
     var userAgentMode by remember { mutableIntStateOf(pwa.userAgentMode) }
+    var enableImmersive by remember { mutableStateOf(pwa.enableImmersiveStatusBar) }
+    var allowMultipleWindows by remember { mutableStateOf(pwa.allowMultipleWindows) }
     var openExternal by remember { mutableStateOf(pwa.openExternalLinksInBrowser) }
     var isPinned by remember { mutableStateOf(pwa.isPinnedToShortcuts) }
 
@@ -215,6 +217,34 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
+                            Text("状态栏沉浸模式", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text("开启后内容延伸穿透状态栏；关闭则保留安全区隔离", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = enableImmersive, onCheckedChange = { enableImmersive = it })
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("允许多任务窗口并发", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text("默认关闭（单窗口：再次点击复用已打开窗口）", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = allowMultipleWindows, onCheckedChange = { allowMultipleWindows = it })
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text("长按应用图标直接打开", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                             Text("加入桌面图标长按弹出的快捷菜单", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -247,6 +277,8 @@ fun EditPwaDialog(
                             themeColor = themeColor,
                             displayMode = displayMode,
                             userAgentMode = userAgentMode,
+                            enableImmersiveStatusBar = enableImmersive,
+                            allowMultipleWindows = allowMultipleWindows,
                             openExternalLinksInBrowser = openExternal,
                             isPinnedToShortcuts = isPinned
                         )

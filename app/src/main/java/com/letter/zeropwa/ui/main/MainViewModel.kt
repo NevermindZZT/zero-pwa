@@ -60,6 +60,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         customThemeColor: Int? = null,
         displayMode: String = "standalone",
         userAgentMode: Int = 0,
+        enableImmersiveStatusBar: Boolean = true,
+        allowMultipleWindows: Boolean = false,
         openExternalInBrowser: Boolean = true,
         isPinnedToShortcuts: Boolean = false
     ) {
@@ -77,6 +79,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 displayMode = displayMode,
                 orientation = candidate.orientation,
                 userAgentMode = userAgentMode,
+                enableImmersiveStatusBar = enableImmersiveStatusBar,
+                allowMultipleWindows = allowMultipleWindows,
                 openExternalLinksInBrowser = openExternalInBrowser,
                 isPinnedToShortcuts = isPinnedToShortcuts
             )
@@ -117,8 +121,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         PwaShortcutManager.createPinnedShortcut(context, item)
     }
 
-    fun launchPwa(context: Context, pwaId: Long) {
-        val intent = PwaShortcutManager.createLaunchIntent(context, pwaId)
+    fun launchPwa(context: Context, pwaId: Long, allowMultipleWindows: Boolean? = null) {
+        val allowMulti = allowMultipleWindows ?: pwaList.value.find { it.id == pwaId }?.allowMultipleWindows ?: false
+        val intent = PwaShortcutManager.createLaunchIntent(context, pwaId, allowMulti)
         context.startActivity(intent)
     }
 }

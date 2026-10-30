@@ -141,7 +141,7 @@ fun HomeScreen(
                     items(pwaList, key = { it.id }) { pwa ->
                         PwaItemCard(
                             pwa = pwa,
-                            onClick = { viewModel.launchPwa(context, pwa.id) },
+                            onClick = { viewModel.launchPwa(context, pwa.id, pwa.allowMultipleWindows) },
                             onMoreClick = { selectedActionPwa = pwa }
                         )
                     }
@@ -154,7 +154,7 @@ fun HomeScreen(
     selectedActionPwa?.let { pwa ->
         PwaActionBottomSheet(
             pwa = pwa,
-            onLaunch = { viewModel.launchPwa(context, pwa.id) },
+            onLaunch = { viewModel.launchPwa(context, pwa.id, pwa.allowMultipleWindows) },
             onPinShortcut = { viewModel.createPinnedShortcut(context, pwa) },
             onToggleShortcut = { viewModel.togglePinnedToShortcuts(pwa) },
             onEdit = { editingPwa = pwa },
@@ -168,13 +168,15 @@ fun HomeScreen(
         AddPwaDialog(
             inspectState = inspectState,
             onInspect = { url -> viewModel.inspectUrl(url) },
-            onConfirmAdd = { candidate, name, customColor, displayMode, uaMode, openExt, isPinned ->
+            onConfirmAdd = { candidate, name, customColor, displayMode, uaMode, enableImmersive, allowMultiple, openExt, isPinned ->
                 viewModel.savePwa(
                     candidate = candidate,
                     customName = name,
                     customThemeColor = customColor,
                     displayMode = displayMode,
                     userAgentMode = uaMode,
+                    enableImmersiveStatusBar = enableImmersive,
+                    allowMultipleWindows = allowMultiple,
                     openExternalInBrowser = openExt,
                     isPinnedToShortcuts = isPinned
                 )

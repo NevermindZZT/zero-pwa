@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
@@ -79,11 +80,13 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import com.letter.zeropwa.data.db.PwaRepository
 import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.data.parser.PwaManifestParser
 import com.letter.zeropwa.shortcut.PwaShortcutManager
 import com.letter.zeropwa.ui.theme.ZeroPwaTheme
+import kotlinx.coroutines.launch
 
 class PwaContainerActivity : ComponentActivity() {
 
@@ -147,6 +150,18 @@ class PwaContainerActivity : ComponentActivity() {
                     },
                     onClose = { finish() }
                 )
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val pwaId = extractPwaId(intent)
+        if (pwaId > 0) {
+            val repo = PwaRepository.getInstance(applicationContext)
+            lifecycleScope.launch {
+                repo.markOpened(pwaId)
             }
         }
     }
@@ -310,9 +325,10 @@ fun PwaContainerScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // 状态栏沉浸保护条：既拥有网站专属的纯粹沉浸色彩，又将安全区隔绝在 WebView 外面，
-            // 彻底防止网页最顶端与次顶端组件发生下移错位与遮挡
-            if (currentPwa.displayMode != PwaItem.DISPLAY_FULLSCREEN) {
+            // 状态栏沉浸与安全区配置处理：
+            // 1. 若关闭了沉浸式（开启安全区保护隔离）且非全屏：插入状态栏高度的保护条，将安全区隔离在 WebView 外
+            // 2. 若开启了沉浸式（默认）：网页内容直接穿透状态栏，享受纯正沉浸式视觉
+            if (!currentPwa.enableImmersiveStatusBar && currentPwa.displayMode != PwaItem.DISPLAY_FULLSCREEN) {
                 Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -326,6 +342,9 @@ fun PwaContainerScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .then(
+                            if (currentPwa.enableImmersiveStatusBar) Modifier.statusBarsPadding() else Modifier
+                        )
                         .background(statusBarComposeColor)
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically

@@ -16,6 +16,8 @@ data class PwaItem(
     val userAgentMode: Int = UA_DEFAULT,
     val enableJavaScript: Boolean = true,
     val enableDomStorage: Boolean = true,
+    val enableImmersiveStatusBar: Boolean = true,
+    val allowMultipleWindows: Boolean = false,
     val openExternalLinksInBrowser: Boolean = true,
     val isPinnedToShortcuts: Boolean = false,
     val lastOpenedAt: Long = 0L,

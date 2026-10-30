@@ -21,13 +21,18 @@ object PwaShortcutManager {
     const val URI_HOST = "pwa"
     const val EXTRA_PWA_ID = "extra_pwa_id"
 
-    fun createLaunchIntent(context: Context, pwaId: Long): Intent {
+    fun createLaunchIntent(context: Context, pwaId: Long, allowMultipleWindows: Boolean = false): Intent {
         return Intent(context, PwaContainerActivity::class.java).apply {
             action = Intent.ACTION_VIEW
             data = Uri.parse("$URI_SCHEME://$URI_HOST/$pwaId")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+            // 关键：NEW_TASK + NEW_DOCUMENT 确保拥有系统级独立任务卡片
+            // 默认单窗口模式：不加 MULTIPLE_TASK，再次点击自动带到前台已打开的窗口；
+            // 若用户配置允许打开多个窗口，才添加 MULTIPLE_TASK
+            var flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+            if (allowMultipleWindows) {
+                flags = flags or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+            }
+            this.flags = flags
             putExtra(EXTRA_PWA_ID, pwaId)
         }
     }
@@ -41,7 +46,7 @@ object PwaShortcutManager {
             return false
         }
 
-        val launchIntent = createLaunchIntent(context, pwa.id)
+        val launchIntent = createLaunchIntent(context, pwa.id, pwa.allowMultipleWindows)
         val repo = PwaRepository.getInstance(context)
         val bitmap = repo.loadIconBitmap(pwa.iconPath)
 
@@ -109,7 +114,7 @@ object PwaShortcutManager {
                     .setShortLabel(pwa.effectiveShortName)
                     .setLongLabel(pwa.displayName)
                     .setIcon(icon)
-                    .setIntent(createLaunchIntent(context, pwa.id))
+                    .setIntent(createLaunchIntent(context, pwa.id, pwa.allowMultipleWindows))
                     .setRank(if (pwa.isPinnedToShortcuts) 0 else 1)
                     .build()
             }
