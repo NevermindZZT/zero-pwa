@@ -3,6 +3,7 @@ package com.letter.zeropwa.shortcut
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
@@ -25,9 +26,6 @@ object PwaShortcutManager {
         return Intent(context, PwaContainerActivity::class.java).apply {
             action = Intent.ACTION_VIEW
             data = Uri.parse("$URI_SCHEME://$URI_HOST/$pwaId")
-            // 关键：NEW_TASK + NEW_DOCUMENT 确保拥有系统级独立任务卡片
-            // 默认单窗口模式：不加 MULTIPLE_TASK，再次点击自动带到前台已打开的窗口；
-            // 若用户配置允许打开多个窗口，才添加 MULTIPLE_TASK
             var flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
             if (allowMultipleWindows) {
                 flags = flags or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
@@ -41,56 +39,50 @@ object PwaShortcutManager {
      * 创建桌面快捷方式 (Pinned Shortcut)
      */
     fun createPinnedShortcut(context: Context, pwa: PwaItem): Boolean {
-        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
-            Toast.makeText(context, "当前桌面启动器不支持添加桌面快捷方式", Toast.LENGTH_SHORT).show()
+        try {
+            if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
+                Toast.makeText(context, "当前桌面启动器不支持添加桌面快捷方式", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            val launchIntent = createLaunchIntent(context, pwa.id, pwa.allowMultipleWindows)
+            val repo = PwaRepository.getInstance(context)
+            val bitmap = repo.loadIconBitmap(pwa.iconPath)
+            val icon = createShortcutIcon(context, bitmap)
+
+            val shortcutInfo = ShortcutInfoCompat.Builder(context, "pinned_pwa_${pwa.id}")
+                .setShortLabel(pwa.effectiveShortName)
+                .setLongLabel(pwa.displayName)
+                .setIcon(icon)
+                .setIntent(launchIntent)
+                .setAlwaysBadged()
+                .build()
+
+            // 彻底解决 Android 14+ (Target SDK 34+) 的 PendingIntent 安全限制闪退问题：
+            // Android 官方规范：无需回调时传入 null，由系统桌面直接唤起原生的添加快捷方式确认对话框
+            val requested = ShortcutManagerCompat.requestPinShortcut(
+                context,
+                shortcutInfo,
+                null
+            )
+
+            if (requested) {
+                Toast.makeText(context, "已发送添加快捷方式请求", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "桌面未响应请求，请检查系统桌面快捷方式权限", Toast.LENGTH_LONG).show()
+            }
+            return requested
+        } catch (se: SecurityException) {
+            Toast.makeText(context, "添加失败：请在系统应用设置中开启「桌面快捷方式」权限", Toast.LENGTH_LONG).show()
+            return false
+        } catch (e: Throwable) {
+            Toast.makeText(context, "添加快捷方式异常: ${e.message}", Toast.LENGTH_SHORT).show()
             return false
         }
-
-        val launchIntent = createLaunchIntent(context, pwa.id, pwa.allowMultipleWindows)
-        val repo = PwaRepository.getInstance(context)
-        val bitmap = repo.loadIconBitmap(pwa.iconPath)
-
-        val icon = if (bitmap != null) {
-            IconCompat.createWithAdaptiveBitmap(bitmap)
-        } else {
-            IconCompat.createWithResource(context, R.mipmap.ic_launcher)
-        }
-
-        val shortcutInfo = ShortcutInfoCompat.Builder(context, "pinned_pwa_${pwa.id}")
-            .setShortLabel(pwa.effectiveShortName)
-            .setLongLabel(pwa.displayName)
-            .setIcon(icon)
-            .setIntent(launchIntent)
-            .setAlwaysBadged()
-            .build()
-
-        val callbackIntent = ShortcutManagerCompat.createShortcutResultIntent(context, shortcutInfo)
-        val successPendingIntent = PendingIntent.getBroadcast(
-            context,
-            pwa.id.toInt(),
-            callbackIntent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
-            }
-        )
-
-        val requested = ShortcutManagerCompat.requestPinShortcut(
-            context,
-            shortcutInfo,
-            successPendingIntent.intentSender
-        )
-
-        if (requested) {
-            Toast.makeText(context, "已发送添加快捷方式请求", Toast.LENGTH_SHORT).show()
-        }
-        return requested
     }
 
     /**
      * 更新长按应用图标弹出的动态快捷方式列表 (Dynamic Shortcuts)
-     * 系统限制一般为 4~5 个
      */
     fun updateDynamicShortcuts(context: Context, pwaList: List<PwaItem>) {
         try {
@@ -104,11 +96,7 @@ object PwaShortcutManager {
             val repo = PwaRepository.getInstance(context)
             val shortcuts = sortedList.map { pwa ->
                 val bitmap = repo.loadIconBitmap(pwa.iconPath)
-                val icon = if (bitmap != null) {
-                    IconCompat.createWithAdaptiveBitmap(bitmap)
-                } else {
-                    IconCompat.createWithResource(context, R.mipmap.ic_launcher)
-                }
+                val icon = createShortcutIcon(context, bitmap)
 
                 ShortcutInfoCompat.Builder(context, "dynamic_pwa_${pwa.id}")
                     .setShortLabel(pwa.effectiveShortName)
@@ -120,6 +108,36 @@ object PwaShortcutManager {
             }
 
             ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts)
-        } catch (_: Exception) {}
+        } catch (_: Throwable) {}
+    }
+
+    /**
+     * 规范化快捷方式图标：按系统允许的最大尺寸安全缩放，避免超大位图触发 Binder 传输异常
+     */
+    private fun createShortcutIcon(context: Context, originalBitmap: Bitmap?): IconCompat {
+        if (originalBitmap == null) {
+            return IconCompat.createWithResource(context, R.mipmap.ic_launcher)
+        }
+
+        return try {
+            val maxDim = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val sm = context.getSystemService(ShortcutManager::class.java)
+                val mw = sm?.iconMaxWidth ?: 192
+                val mh = sm?.iconMaxHeight ?: 192
+                minOf(mw, mh).coerceIn(96, 256)
+            } else {
+                192
+            }
+
+            val scaled = if (originalBitmap.width > maxDim || originalBitmap.height > maxDim) {
+                Bitmap.createScaledBitmap(originalBitmap, maxDim, maxDim, true)
+            } else {
+                originalBitmap
+            }
+
+            IconCompat.createWithAdaptiveBitmap(scaled)
+        } catch (_: Throwable) {
+            IconCompat.createWithResource(context, R.mipmap.ic_launcher)
+        }
     }
 }
