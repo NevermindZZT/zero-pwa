@@ -17,6 +17,9 @@ class ZeroPwaApplication : Application() {
             .build()
         Coil.setImageLoader(imageLoader)
 
+        // 初始化主题配置状态
+        com.letter.zeropwa.data.AppThemeState.init(this)
+
         // 预热 Repository 并同步动态快捷方式
         PwaRepository.getInstance(this)
     }

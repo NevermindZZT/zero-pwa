@@ -1,5 +1,6 @@
 package com.letter.zeropwa.ui.main
 
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Web
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.letter.zeropwa.data.model.PwaItem
+import com.letter.zeropwa.ui.settings.SettingsActivity
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,6 +94,17 @@ fun HomeScreen(
                             text = "任意网站 · 独立窗口 · 原生体验",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        context.startActivity(Intent(context, SettingsActivity::class.java))
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "设置",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },

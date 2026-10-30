@@ -10,10 +10,14 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.letter.zeropwa.data.AppThemeMode
+import com.letter.zeropwa.data.AppThemeState
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -29,11 +33,17 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun ZeroPwaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Android 12+ 动态壁纸 Monet 取色
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val themeMode by AppThemeState.themeMode.collectAsState()
+    val dynamicColor by AppThemeState.dynamicColor.collectAsState()
+
+    val darkTheme = when (themeMode) {
+        AppThemeMode.FOLLOW_SYSTEM -> isSystemInDarkTheme()
+        AppThemeMode.LIGHT -> false
+        AppThemeMode.DARK -> true
+    }
+
     val context = LocalContext.current
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -48,7 +58,6 @@ fun ZeroPwaTheme(
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = colorScheme.background.toArgb()
                 val controller = WindowCompat.getInsetsController(window, view)
                 controller.isAppearanceLightStatusBars = !darkTheme
                 controller.isAppearanceLightNavigationBars = !darkTheme
