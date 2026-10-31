@@ -25,7 +25,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -40,6 +39,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -75,6 +75,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -134,7 +135,11 @@ class PwaContainerActivity : ComponentActivity() {
             }
         })
 
-        setContent {
+        // Configure before composition: Compose 1.6 consumes all native insets as soon
+        // as imePadding reads them, otherwise starving the embedded WebView of safe-area.
+        val composeView = createPwaComposeView(this)
+        setContentView(composeView)
+        composeView.setContent {
             ZeroPwaTheme {
                 PwaContainerScreen(
                     pwaId = pwaId,
@@ -404,6 +409,12 @@ class PwaContainerActivity : ComponentActivity() {
     }
 }
 
+// Keep native status-bar/cutout insets available to WebView. Compose still uses IME
+// insets to resize its layout; this flag only disables whole-packet consumption.
+internal fun createPwaComposeView(context: Context): ComposeView = ComposeView(context).apply {
+    consumeWindowInsets = false
+}
+
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun PwaContainerScreen(
@@ -592,6 +603,7 @@ fun PwaContainerScreen(
                     modifier = Modifier.fillMaxSize(),
                     factory = { ctx ->
                         WebView(ctx).apply {
+                            configureViewportInsets()
                             layoutParams = ViewGroup.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -652,6 +664,7 @@ fun PwaContainerScreen(
                                     currentUrl = url
                                     isLoading = true
                                     errorMessage = null
+
                                     // 注入 WebSocket 透明长连接生命周期追踪
                                     evaluateJavascript(
                                         """
@@ -684,6 +697,7 @@ fun PwaContainerScreen(
                                 onPageFinishedListener = { url ->
                                     currentUrl = url
                                     isLoading = false
+
                                     // 确保 WebSocket 透明长连接追踪在单页应用就绪
                                     evaluateJavascript(
                                         """
