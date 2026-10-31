@@ -47,6 +47,7 @@
             android:exported="true"
             android:documentLaunchMode="intoExisting"
             android:autoRemoveFromRecents="false"
+            android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
             android:resizeableActivity="true"
             android:theme="@style/Theme.ZeroPwa">

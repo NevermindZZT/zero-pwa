@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -341,7 +342,7 @@ fun PwaContainerScreen(
         modifier = Modifier.fillMaxSize(),
         color = currentPwa.backgroundColor?.let { Color(it) } ?: MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().imePadding()) {
 
             // 状态栏沉浸与安全区配置处理：
             // 1. 若关闭了沉浸式（开启安全区保护隔离）且非全屏：插入状态栏高度的保护条，将安全区隔离在 WebView 外
@@ -548,6 +549,26 @@ fun PwaContainerScreen(
                                             }
                                         }
                                     }
+                                    // 确保页面聚焦输入框时，自动平滑滚动到视口舒适可见区域，防止软键盘遮挡
+                                    val focusAdjustJs = """
+                                        (function() {
+                                            if (window.__zeropwa_focus_listener_attached) return;
+                                            window.__zeropwa_focus_listener_attached = true;
+                                            window.addEventListener('focusin', function(e) {
+                                                var t = e.target;
+                                                if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) {
+                                                    setTimeout(function() {
+                                                        try {
+                                                            t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                        } catch(err) {
+                                                            try { t.scrollIntoView(false); } catch(e2) {}
+                                                        }
+                                                    }, 300);
+                                                }
+                                            }, true);
+                                        })()
+                                    """.trimIndent()
+                                    evaluateJavascript(focusAdjustJs, null)
                                 },
                                 onErrorReceivedListener = { err ->
                                     errorMessage = err
