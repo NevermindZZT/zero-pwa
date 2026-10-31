@@ -239,6 +239,60 @@ class PwaContainerActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        webView?.onResume()
+        dispatchForegroundReconnectionPulse()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try {
+            CookieManager.getInstance().flush()
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * 前台长连接自愈脉冲：
+     * 当应用从 Android 后台返回前台时，主动派发网络恢复与可见性事件，
+     * 并探测已处于 CLOSED 或假死状态的 WebSocket 连接，促发前端框架自愈重连。
+     */
+    private fun dispatchForegroundReconnectionPulse() {
+        val wv = webView ?: return
+        wv.postDelayed({
+            val pulseJs = """
+                (function() {
+                    try {
+                        // 1. 强制派发网络重连与可见性聚焦事件
+                        window.dispatchEvent(new Event('online'));
+                        document.dispatchEvent(new Event('visibilitychange'));
+                        window.dispatchEvent(new Event('focus'));
+
+                        // 2. 扫描并唤醒断开或假死的 WebSocket 实例
+                        if (window.__zeropwa_active_websockets && Array.isArray(window.__zeropwa_active_websockets)) {
+                            window.__zeropwa_active_websockets.forEach(function(item) {
+                                if (item && item.ws) {
+                                    var ws = item.ws;
+                                    if (ws.readyState === 2 || ws.readyState === 3) {
+                                        try {
+                                            if (typeof ws.onerror === 'function') ws.onerror(new Event('error'));
+                                            if (typeof ws.onclose === 'function') {
+                                                ws.onclose(new CloseEvent('close', { wasClean: false, code: 1006, reason: 'ZeroPwa Wakeup' }));
+                                            }
+                                        } catch(e) {}
+                                    } else if (ws.readyState === 1) {
+                                        try { ws.send(''); } catch(e) {}
+                                    }
+                                }
+                            });
+                        }
+                    } catch(err) {}
+                })();
+            """.trimIndent()
+            wv.evaluateJavascript(pulseJs, null)
+        }, 200)
+    }
+
     override fun onDestroy() {
         webView?.let {
             it.stopLoading()
@@ -502,10 +556,66 @@ fun PwaContainerScreen(
                                     currentUrl = url
                                     isLoading = true
                                     errorMessage = null
+                                    // 注入 WebSocket 透明长连接生命周期追踪
+                                    evaluateJavascript(
+                                        """
+                                        (function() {
+                                            if (window.__zeropwa_ws_hooked) return;
+                                            window.__zeropwa_ws_hooked = true;
+                                            window.__zeropwa_active_websockets = [];
+                                            var OrigWS = window.WebSocket;
+                                            if (!OrigWS) return;
+                                            window.WebSocket = function(url, protocols) {
+                                                var ws = protocols !== undefined ? new OrigWS(url, protocols) : new OrigWS(url);
+                                                var ref = { ws: ws, url: url, time: Date.now() };
+                                                window.__zeropwa_active_websockets.push(ref);
+                                                ws.addEventListener('close', function() {
+                                                    var i = window.__zeropwa_active_websockets.indexOf(ref);
+                                                    if (i > -1) window.__zeropwa_active_websockets.splice(i, 1);
+                                                });
+                                                return ws;
+                                            };
+                                            window.WebSocket.prototype = OrigWS.prototype;
+                                            window.WebSocket.CONNECTING = OrigWS.CONNECTING;
+                                            window.WebSocket.OPEN = OrigWS.OPEN;
+                                            window.WebSocket.CLOSING = OrigWS.CLOSING;
+                                            window.WebSocket.CLOSED = OrigWS.CLOSED;
+                                        })();
+                                        """.trimIndent(),
+                                        null
+                                    )
                                 },
                                 onPageFinishedListener = { url ->
                                     currentUrl = url
                                     isLoading = false
+                                    // 确保 WebSocket 透明长连接追踪在单页应用就绪
+                                    evaluateJavascript(
+                                        """
+                                        (function() {
+                                            if (window.__zeropwa_ws_hooked) return;
+                                            window.__zeropwa_ws_hooked = true;
+                                            window.__zeropwa_active_websockets = [];
+                                            var OrigWS = window.WebSocket;
+                                            if (!OrigWS) return;
+                                            window.WebSocket = function(url, protocols) {
+                                                var ws = protocols !== undefined ? new OrigWS(url, protocols) : new OrigWS(url);
+                                                var ref = { ws: ws, url: url, time: Date.now() };
+                                                window.__zeropwa_active_websockets.push(ref);
+                                                ws.addEventListener('close', function() {
+                                                    var i = window.__zeropwa_active_websockets.indexOf(ref);
+                                                    if (i > -1) window.__zeropwa_active_websockets.splice(i, 1);
+                                                });
+                                                return ws;
+                                            };
+                                            window.WebSocket.prototype = OrigWS.prototype;
+                                            window.WebSocket.CONNECTING = OrigWS.CONNECTING;
+                                            window.WebSocket.OPEN = OrigWS.OPEN;
+                                            window.WebSocket.CLOSING = OrigWS.CLOSING;
+                                            window.WebSocket.CLOSED = OrigWS.CLOSED;
+                                        })();
+                                        """.trimIndent(),
+                                        null
+                                    )
                                     // 仅当用户未显式设置主题色时，才尝试提取页面动态更新的 theme-color
                                     if (currentPwa.themeColor == null) {
                                         evaluateJavascript(
