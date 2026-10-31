@@ -60,9 +60,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.letter.zeropwa.data.AppPreferences
 import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.data.parser.PwaCandidate
 
@@ -78,6 +80,7 @@ fun AddPwaDialog(
         displayMode: String,
         userAgentMode: Int,
         statusBarIconMode: Int,
+        enableFloatingHandle: Boolean,
         enableImmersiveStatusBar: Boolean,
         allowMultipleWindows: Boolean,
         openExternalInBrowser: Boolean,
@@ -86,6 +89,8 @@ fun AddPwaDialog(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
+    val prefs = remember { AppPreferences(context) }
     val clipboardManager = LocalClipboardManager.current
     var urlInput by remember { mutableStateOf("") }
 
@@ -94,6 +99,7 @@ fun AddPwaDialog(
     var selectedDisplayMode by remember { mutableStateOf(PwaItem.DISPLAY_STANDALONE) }
     var selectedUaMode by remember { mutableIntStateOf(PwaItem.UA_DEFAULT) }
     var selectedIconMode by remember { mutableIntStateOf(PwaItem.STATUS_BAR_ICON_AUTO) }
+    var enableFloatingHandle by remember { mutableStateOf(prefs.defaultFloatingToolHandle) }
     var enableImmersive by remember { mutableStateOf(true) }
     var allowMultipleWindows by remember { mutableStateOf(false) }
     var openExternal by remember { mutableStateOf(true) }
@@ -456,6 +462,20 @@ fun AddPwaDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
+                                        Text("贴边悬浮工具手柄", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text("平时贴边半隐形不遮挡，轻触随时刷新网页与主页导航", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Switch(checked = enableFloatingHandle, onCheckedChange = { enableFloatingHandle = it })
+                                }
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text("状态栏沉浸模式", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                                         Text("开启后内容延伸穿透状态栏；关闭则保留安全区隔离", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
@@ -518,6 +538,7 @@ fun AddPwaDialog(
                             selectedDisplayMode,
                             selectedUaMode,
                             selectedIconMode,
+                            enableFloatingHandle,
                             enableImmersive,
                             allowMultipleWindows,
                             openExternal,

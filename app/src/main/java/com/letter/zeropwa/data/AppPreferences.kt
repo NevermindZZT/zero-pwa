@@ -39,11 +39,16 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_DEFAULT_ALLOW_MULTI, false)
         set(value) = prefs.edit().putBoolean(KEY_DEFAULT_ALLOW_MULTI, value).apply()
 
+    var defaultFloatingToolHandle: Boolean
+        get() = prefs.getBoolean(KEY_DEFAULT_FLOATING_HANDLE, true)
+        set(value) = prefs.edit().putBoolean(KEY_DEFAULT_FLOATING_HANDLE, value).apply()
+
     companion object {
         private const val KEY_THEME_MODE = "key_theme_mode"
         private const val KEY_DYNAMIC_COLOR = "key_dynamic_color"
         private const val KEY_DEFAULT_IMMERSIVE = "key_default_immersive"
         private const val KEY_DEFAULT_ALLOW_MULTI = "key_default_allow_multi"
+        private const val KEY_DEFAULT_FLOATING_HANDLE = "key_default_floating_handle"
     }
 }
 

@@ -96,6 +96,7 @@ fun SettingsScreen(
 
     var defaultImmersive by remember { mutableStateOf(prefs.defaultImmersiveStatusBar) }
     var defaultAllowMulti by remember { mutableStateOf(prefs.defaultAllowMultipleWindows) }
+    var defaultFloatingHandle by remember { mutableStateOf(prefs.defaultFloatingToolHandle) }
 
     val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? PowerManager }
     var isIgnoringBattery by remember {
@@ -237,6 +238,19 @@ fun SettingsScreen(
                         onCheckedChange = {
                             defaultImmersive = it
                             prefs.defaultImmersiveStatusBar = it
+                        }
+                    )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+                    SettingsSwitchRow(
+                        title = "新建时默认开启悬浮工具手柄",
+                        subtitle = "贴边半隐形微手柄，提供随时刷新网页与快捷导航功能",
+                        icon = Icons.Default.Tune,
+                        checked = defaultFloatingHandle,
+                        onCheckedChange = {
+                            defaultFloatingHandle = it
+                            prefs.defaultFloatingToolHandle = it
                         }
                     )
 

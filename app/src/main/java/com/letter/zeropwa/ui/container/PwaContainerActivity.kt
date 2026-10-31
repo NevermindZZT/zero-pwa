@@ -173,7 +173,7 @@ class PwaContainerActivity : ComponentActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            handleAppBackPressed()
+            onBackPressedDispatcher.onBackPressed()
             return true
         }
         return super.onKeyDown(keyCode, event)
@@ -451,6 +451,13 @@ fun PwaContainerScreen(
             iconBitmap = bmp
             dynamicThemeColor = item.themeColor
             onApplyTheme(item, bmp)
+        }
+    }
+
+    // 设置页修改的是同一个 Repository；已有任务窗口不能一直使用启动时的旧快照。
+    LaunchedEffect(repo, pwaId) {
+        repo.pwaList.collect { items ->
+            items.firstOrNull { it.id == pwaId }?.let { pwaItem = it }
         }
     }
 
@@ -834,6 +841,26 @@ fun PwaContainerScreen(
                             }
                         }
                     }
+                }
+
+                // 贴边灵动悬浮手柄 (支持单独按 PWA 配置开启/关闭，无操作自动半隐形，解决随时刷新与快捷操作需求)
+                if (currentPwa.enableFloatingToolHandle) {
+                    FloatingEdgeToolHandle(
+                        onReload = { webViewRef?.reload() },
+                        onGoHome = { webViewRef?.loadUrl(currentPwa.effectiveStartUrl) },
+                        onOpenInBrowser = {
+                            try {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(webViewRef?.url ?: currentUrl.ifBlank { currentPwa.effectiveStartUrl })
+                                )
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        currentUrl = { webViewRef?.url ?: currentUrl.ifBlank { currentPwa.effectiveStartUrl } }
+                    )
                 }
             }
         }

@@ -185,7 +185,7 @@ fun HomeScreen(
         AddPwaDialog(
             inspectState = inspectState,
             onInspect = { url -> viewModel.inspectUrl(url) },
-            onConfirmAdd = { candidate, name, customColor, displayMode, uaMode, iconMode, enableImmersive, allowMultiple, openExt, isPinned ->
+            onConfirmAdd = { candidate, name, customColor, displayMode, uaMode, iconMode, enableFloating, enableImmersive, allowMultiple, openExt, isPinned ->
                 viewModel.savePwa(
                     candidate = candidate,
                     customName = name,
@@ -193,6 +193,7 @@ fun HomeScreen(
                     displayMode = displayMode,
                     userAgentMode = uaMode,
                     statusBarIconMode = iconMode,
+                    enableFloatingToolHandle = enableFloating,
                     enableImmersiveStatusBar = enableImmersive,
                     allowMultipleWindows = allowMultiple,
                     openExternalInBrowser = openExt,

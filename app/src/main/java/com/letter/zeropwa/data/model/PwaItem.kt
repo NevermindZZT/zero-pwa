@@ -15,6 +15,7 @@ data class PwaItem(
     val orientation: String = ORIENTATION_ANY,
     val userAgentMode: Int = UA_DEFAULT,
     val statusBarIconMode: Int = STATUS_BAR_ICON_AUTO,
+    val enableFloatingToolHandle: Boolean = true,
     val enableJavaScript: Boolean = true,
     val enableDomStorage: Boolean = true,
     val enableImmersiveStatusBar: Boolean = true,
