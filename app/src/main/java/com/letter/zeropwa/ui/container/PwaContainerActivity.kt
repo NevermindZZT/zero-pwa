@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.URLUtil
@@ -22,6 +23,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -93,6 +95,7 @@ class PwaContainerActivity : ComponentActivity() {
 
     private var webView: WebView? = null
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
+    private var lastBackPressTime = 0L
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -124,6 +127,13 @@ class PwaContainerActivity : ComponentActivity() {
             return
         }
 
+        // 统一注册系统返回手势调度器
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleAppBackPressed()
+            }
+        })
+
         setContent {
             ZeroPwaTheme {
                 PwaContainerScreen(
@@ -149,9 +159,99 @@ class PwaContainerActivity : ComponentActivity() {
                     onApplyTheme = { pwa, iconBitmap ->
                         applyTaskDescriptionAndOrientation(pwa, iconBitmap)
                     },
-                    onClose = { finish() }
+                    onBackPressed = { handleAppBackPressed() },
+                    onClose = { handleFinishWithDoubleBack() }
                 )
             }
+        }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            handleAppBackPressed()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    /**
+     * 多级智能返回导航管道：
+     * 1. 优先触发 WebView 原生历史回退 (canGoBack)
+     * 2. 针对 SPA 单页应用，探测页面内置返回按钮、关闭抽屉底栏与派发 Escape / backbutton
+     * 3. 根视图防误触：2 秒内连续按两次返回键才真正退出 PWA
+     */
+    fun handleAppBackPressed() {
+        val wv = webView
+        if (wv == null) {
+            handleFinishWithDoubleBack()
+            return
+        }
+
+        // 1. 历史栈回退
+        if (wv.canGoBack()) {
+            wv.goBack()
+            return
+        }
+
+        // 2. 针对单页应用进行智能返回与关闭弹层探测
+        val smartBackJs = """
+            (function() {
+                try {
+                    // 检查页面左上角或顶部的返回/后退按钮并优先点击 (如 "< 行程", "返回" 等)
+                    var backSelectors = [
+                        'button[aria-label*="返回"]', 'button[aria-label*="Back"]',
+                        'a[aria-label*="返回"]', 'a[aria-label*="Back"]',
+                        '.nav-back', '.btn-back', '.back-button', '.back',
+                        '.atlas-topbar button', '.workspace-topbar button',
+                        '[data-action="back"]', '.navbar-back'
+                    ];
+                    for (var i = 0; i < backSelectors.length; i++) {
+                        var btn = document.querySelector(backSelectors[i]);
+                        if (btn && btn.offsetParent !== null && typeof btn.click === 'function') {
+                            btn.click();
+                            return 'clicked_button';
+                        }
+                    }
+
+                    // 派发 Escape 键盘事件以尝试关闭模态框、抽屉与菜单
+                    var escEvent = new KeyboardEvent('keydown', {
+                        key: 'Escape',
+                        code: 'Escape',
+                        keyCode: 27,
+                        which: 27,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    document.dispatchEvent(escEvent);
+                    window.dispatchEvent(escEvent);
+
+                    // 派发 Hybrid 标准 backbutton 事件
+                    var backEvent = new Event('backbutton', { bubbles: true, cancelable: true });
+                    document.dispatchEvent(backEvent);
+                    window.dispatchEvent(backEvent);
+                } catch(e) {}
+                return 'none';
+            })();
+        """.trimIndent()
+
+        wv.evaluateJavascript(smartBackJs) { result ->
+            val clean = result?.replace("\"", "")?.trim()
+            if (clean == "clicked_button") {
+                // 成功触发网页内部返回按钮，无需退出应用
+                return@evaluateJavascript
+            }
+            // 页面已无内部回退项，进入防误触双击退出
+            handleFinishWithDoubleBack()
+        }
+    }
+
+    private fun handleFinishWithDoubleBack() {
+        val now = System.currentTimeMillis()
+        if (now - lastBackPressTime < 2000L) {
+            finish()
+        } else {
+            lastBackPressTime = now
+            Toast.makeText(this, "再按一次退出应用", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -312,6 +412,7 @@ fun PwaContainerScreen(
     onOpenFileChooser: (ValueCallback<Array<Uri>>?, WebChromeClient.FileChooserParams?) -> Boolean,
     onDownloadRequested: (url: String, userAgent: String, contentDisposition: String, mimeType: String) -> Unit,
     onApplyTheme: (PwaItem, Bitmap?) -> Unit,
+    onBackPressed: () -> Unit,
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
@@ -342,14 +443,9 @@ fun PwaContainerScreen(
         }
     }
 
-    // 网页返回键导航监听
+    // 网页返回键与侧滑手势导航监听：统一走多级智能调度器
     BackHandler(enabled = true) {
-        val wv = webViewRef
-        if (wv != null && wv.canGoBack()) {
-            wv.goBack()
-        } else {
-            onClose()
-        }
+        onBackPressed()
     }
 
     val currentPwa = pwaItem
