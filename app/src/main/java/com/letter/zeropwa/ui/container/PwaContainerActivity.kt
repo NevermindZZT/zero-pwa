@@ -16,6 +16,7 @@ import android.os.Environment
 import android.view.KeyEvent
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
 import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -415,6 +416,13 @@ internal fun createPwaComposeView(context: Context): ComposeView = ComposeView(c
     consumeWindowInsets = false
 }
 
+internal class StatusBarLuminanceBridge(private val onLuminanceReported: (Boolean) -> Unit) {
+    @JavascriptInterface
+    fun reportTopIsLight(isLight: Boolean) {
+        onLuminanceReported(isLight)
+    }
+}
+
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun PwaContainerScreen(
@@ -646,6 +654,17 @@ fun PwaContainerScreen(
                             cookieManager.setAcceptCookie(true)
                             cookieManager.setAcceptThirdPartyCookies(this, true)
 
+                            // 注册状态栏视口明暗度双向响应桥接接口
+                            val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                            addJavascriptInterface(
+                                StatusBarLuminanceBridge { isLight ->
+                                    mainHandler.post {
+                                        sampledTopIsLight = isLight
+                                    }
+                                },
+                                "__zeroPwaStatusBarBridge"
+                            )
+
                             // 下载监听器
                             setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
                                 onDownloadRequested(url, userAgent, contentDisposition, mimeType)
@@ -748,33 +767,109 @@ fun PwaContainerScreen(
                                         }
                                     }
 
-                                    // 沉浸穿透模式下：智能采样网页顶部视口真实背景色与亮度，自动适配状态栏文字黑白
+                                    // 沉浸穿透模式下：全生命周期实时智能感知网页顶部视口背景色变动 (滚动、DOM突变、模式切换与单页路由)
                                     if (currentPwa.enableImmersiveStatusBar && currentPwa.statusBarIconMode == PwaItem.STATUS_BAR_ICON_AUTO) {
-                                        val sampleJs = """
+                                        val dynamicLuminanceWatcherJs = """
                                             (function() {
-                                                try {
-                                                    var el = document.elementFromPoint(window.innerWidth / 2, 20);
-                                                    while (el && el !== document.documentElement) {
-                                                        var s = window.getComputedStyle(el);
-                                                        var bg = s.backgroundColor;
-                                                        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return bg;
-                                                        el = el.parentElement;
+                                                if (window.__zeropwa_luminance_watcher_installed) return;
+                                                window.__zeropwa_luminance_watcher_installed = true;
+
+                                                var lastIsLight = null;
+
+                                                function parseRgbColor(colorStr) {
+                                                    if (!colorStr || colorStr === 'transparent' || colorStr.indexOf('rgba(0, 0, 0, 0)') > -1) return null;
+                                                    var match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+                                                    if (match) {
+                                                        var a = match[4] !== undefined ? parseFloat(match[4]) : 1;
+                                                        if (a < 0.2) return null;
+                                                        return {
+                                                            r: parseInt(match[1], 10),
+                                                            g: parseInt(match[2], 10),
+                                                            b: parseInt(match[3], 10)
+                                                        };
                                                     }
-                                                    var bodyBg = window.getComputedStyle(document.body).backgroundColor;
-                                                    if (bodyBg && bodyBg !== 'transparent' && bodyBg !== 'rgba(0, 0, 0, 0)') return bodyBg;
-                                                    return '';
-                                                } catch(e) { return ''; }
-                                            })()
-                                        """.trimIndent()
-                                        evaluateJavascript(sampleJs) { sampledVal ->
-                                            val clean = sampledVal?.replace("\"", "")?.trim()
-                                            if (!clean.isNullOrBlank()) {
-                                                val parsed = PwaManifestParser.parseColorSafely(clean)
-                                                if (parsed != null) {
-                                                    sampledTopIsLight = ColorUtils.calculateLuminance(parsed) > 0.5
+                                                    if (colorStr.indexOf('#') === 0) {
+                                                        var hex = colorStr.substring(1);
+                                                        if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+                                                        if (hex.length === 6) {
+                                                            return {
+                                                                r: parseInt(hex.substring(0, 2), 16),
+                                                                g: parseInt(hex.substring(2, 4), 16),
+                                                                b: parseInt(hex.substring(4, 6), 16)
+                                                            };
+                                                        }
+                                                    }
+                                                    return null;
                                                 }
-                                            }
-                                        }
+
+                                                function checkTopLuminance() {
+                                                    try {
+                                                        var x = window.innerWidth / 2;
+                                                        var y = 20;
+                                                        var el = document.elementFromPoint(x, y);
+                                                        var rgb = null;
+                                                        while (el && el !== document.documentElement) {
+                                                            var s = window.getComputedStyle(el);
+                                                            rgb = parseRgbColor(s.backgroundColor);
+                                                            if (rgb) break;
+                                                            el = el.parentElement;
+                                                        }
+                                                        if (!rgb) {
+                                                            rgb = parseRgbColor(window.getComputedStyle(document.body).backgroundColor);
+                                                        }
+                                                        if (!rgb) {
+                                                            rgb = parseRgbColor(window.getComputedStyle(document.documentElement).backgroundColor);
+                                                        }
+                                                        // 默认无背景时按浅色处理
+                                                        var isLight = true;
+                                                        if (rgb) {
+                                                            var lum = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                                                            isLight = lum > 130;
+                                                        }
+                                                        if (isLight !== lastIsLight) {
+                                                            lastIsLight = isLight;
+                                                            if (window.__zeroPwaStatusBarBridge && typeof window.__zeroPwaStatusBarBridge.reportTopIsLight === 'function') {
+                                                                window.__zeroPwaStatusBarBridge.reportTopIsLight(isLight);
+                                                            }
+                                                        }
+                                                    } catch(e) {}
+                                                }
+
+                                                // 1. 立即检测
+                                                checkTopLuminance();
+
+                                                // 2. 页面滚动实时侦听 (带 80ms 节流)
+                                                var scrollTimer = null;
+                                                window.addEventListener('scroll', function() {
+                                                    if (scrollTimer) return;
+                                                    scrollTimer = setTimeout(function() {
+                                                        scrollTimer = null;
+                                                        checkTopLuminance();
+                                                    }, 80);
+                                                }, { passive: true });
+
+                                                // 3. 单页路由与 hash 变化侦听
+                                                window.addEventListener('popstate', checkTopLuminance);
+                                                window.addEventListener('hashchange', checkTopLuminance);
+
+                                                // 4. DOM 突变/样式变动/暗黑模式切换侦听
+                                                var observerTimer = null;
+                                                var observer = new MutationObserver(function() {
+                                                    if (observerTimer) return;
+                                                    observerTimer = setTimeout(function() {
+                                                        observerTimer = null;
+                                                        checkTopLuminance();
+                                                    }, 120);
+                                                });
+                                                observer.observe(document.documentElement, {
+                                                    childList: true,
+                                                    subtree: true,
+                                                    attributes: true,
+                                                    attributeFilter: ['class', 'style', 'data-theme']
+                                                });
+                                            })();
+                                        """.trimIndent()
+                                        evaluateJavascript(dynamicLuminanceWatcherJs, null)
                                     }
                                     // 确保页面聚焦输入框时，自动平滑滚动到视口舒适可见区域，防止软键盘遮挡
                                     val focusAdjustJs = """
