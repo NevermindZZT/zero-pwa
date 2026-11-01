@@ -125,6 +125,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         PwaShortcutManager.createPinnedShortcut(context, item)
     }
 
+    fun movePwaUp(pwaId: Long) {
+        viewModelScope.launch {
+            repository.moveUp(pwaId)
+        }
+    }
+
+    fun movePwaDown(pwaId: Long) {
+        viewModelScope.launch {
+            repository.moveDown(pwaId)
+        }
+    }
+
+    fun movePwaToTop(pwaId: Long) {
+        viewModelScope.launch {
+            repository.moveToTop(pwaId)
+        }
+    }
+
+    fun setSortOrder(order: com.letter.zeropwa.data.PwaSortOrder) {
+        com.letter.zeropwa.data.AppThemeState.setSortOrder(getApplication(), order)
+    }
+
     fun launchPwa(context: Context, pwaId: Long, allowMultipleWindows: Boolean? = null) {
         val allowMulti = allowMultipleWindows ?: pwaList.value.find { it.id == pwaId }?.allowMultipleWindows ?: false
         val intent = PwaShortcutManager.createLaunchIntent(context, pwaId, allowMulti)

@@ -80,6 +80,7 @@ import com.letter.zeropwa.BuildConfig
 import com.letter.zeropwa.data.AppPreferences
 import com.letter.zeropwa.data.AppThemeMode
 import com.letter.zeropwa.data.AppThemeState
+import com.letter.zeropwa.data.PwaSortOrder
 
 private const val GITHUB_REPO_URL = "https://github.com/NevermindZZT/zero-pwa"
 
@@ -93,6 +94,7 @@ fun SettingsScreen(
 
     val themeMode by AppThemeState.themeMode.collectAsState()
     val dynamicColor by AppThemeState.dynamicColor.collectAsState()
+    val pwaSortOrder by AppThemeState.pwaSortOrder.collectAsState()
 
     var defaultImmersive by remember { mutableStateOf(prefs.defaultImmersiveStatusBar) }
     var defaultAllowMulti by remember { mutableStateOf(prefs.defaultAllowMultipleWindows) }
@@ -266,6 +268,47 @@ fun SettingsScreen(
                             prefs.defaultAllowMultipleWindows = it
                         }
                     )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+                    Text(
+                        text = "首页列表默认排序规则",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        text = "默认使用自定义排序，打开应用不会打乱列表位置",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PwaSortOrder.entries.take(2).forEach { order ->
+                            FilterChip(
+                                selected = pwaSortOrder == order,
+                                onClick = { AppThemeState.setSortOrder(context, order) },
+                                label = { Text(order.label, style = MaterialTheme.typography.labelSmall) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PwaSortOrder.entries.drop(2).forEach { order ->
+                            FilterChip(
+                                selected = pwaSortOrder == order,
+                                onClick = { AppThemeState.setSortOrder(context, order) },
+                                label = { Text(order.label, style = MaterialTheme.typography.labelSmall) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                        }
+                    }
                 }
             }
 

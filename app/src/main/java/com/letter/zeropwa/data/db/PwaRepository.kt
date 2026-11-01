@@ -3,6 +3,9 @@ package com.letter.zeropwa.data.db
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.letter.zeropwa.data.AppPreferences
+import com.letter.zeropwa.data.AppThemeState
+import com.letter.zeropwa.data.PwaSortOrder
 import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.shortcut.PwaShortcutManager
 import kotlinx.coroutines.CoroutineScope
@@ -26,19 +29,28 @@ class PwaRepository private constructor(private val context: Context) {
 
     init {
         refreshList()
+        // 响应排序偏好变更
+        scope.launch {
+            AppThemeState.pwaSortOrder.collect {
+                refreshList()
+            }
+        }
     }
 
-    private fun refreshList() {
+    fun refreshList() {
         scope.launch {
-            val list = dbHelper.getAll()
+            val sortOrder = AppPreferences(context).pwaSortOrder
+            val list = dbHelper.getAll(sortOrder.sqlOrderBy)
             _pwaList.value = list
-            // 自动同步刷新长按桌面图标的 Dynamic Shortcuts
-            PwaShortcutManager.updateDynamicShortcuts(context, list)
+            // 桌面长按快捷方式始终保持高优先级规则 (置顶项 + 最近使用项)
+            val dynamicCandidates = dbHelper.getAll("is_pinned_shortcut DESC, last_opened_at DESC, created_at DESC")
+            PwaShortcutManager.updateDynamicShortcuts(context, dynamicCandidates)
         }
     }
 
     suspend fun getAll(): List<PwaItem> = withContext(Dispatchers.IO) {
-        dbHelper.getAll()
+        val sortOrder = AppPreferences(context).pwaSortOrder
+        dbHelper.getAll(sortOrder.sqlOrderBy)
     }
 
     suspend fun getById(id: Long): PwaItem? = withContext(Dispatchers.IO) {
@@ -48,9 +60,7 @@ class PwaRepository private constructor(private val context: Context) {
     suspend fun insert(item: PwaItem): Long = withContext(Dispatchers.IO) {
         val id = dbHelper.insert(item)
         if (id > 0) {
-            val updated = dbHelper.getAll()
-            _pwaList.value = updated
-            PwaShortcutManager.updateDynamicShortcuts(context, updated)
+            refreshList()
         }
         id
     }
@@ -58,9 +68,7 @@ class PwaRepository private constructor(private val context: Context) {
     suspend fun update(item: PwaItem): Boolean = withContext(Dispatchers.IO) {
         val success = dbHelper.update(item) > 0
         if (success) {
-            val updated = dbHelper.getAll()
-            _pwaList.value = updated
-            PwaShortcutManager.updateDynamicShortcuts(context, updated)
+            refreshList()
         }
         success
     }
@@ -74,9 +82,7 @@ class PwaRepository private constructor(private val context: Context) {
                     File(path).delete()
                 } catch (_: Exception) {}
             }
-            val updated = dbHelper.getAll()
-            _pwaList.value = updated
-            PwaShortcutManager.updateDynamicShortcuts(context, updated)
+            refreshList()
         }
         success
     }
@@ -84,16 +90,68 @@ class PwaRepository private constructor(private val context: Context) {
     suspend fun markOpened(id: Long) = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
         dbHelper.updateLastOpened(id, now)
-        val updated = dbHelper.getAll()
-        _pwaList.value = updated
-        PwaShortcutManager.updateDynamicShortcuts(context, updated)
+        // 仅在当前排序偏好为"最近使用优先"时，打开应用才会前移；手动排序下位置保持不变
+        refreshList()
     }
 
     suspend fun setPinnedToShortcuts(id: Long, isPinned: Boolean) = withContext(Dispatchers.IO) {
         dbHelper.updatePinnedShortcut(id, isPinned)
-        val updated = dbHelper.getAll()
-        _pwaList.value = updated
-        PwaShortcutManager.updateDynamicShortcuts(context, updated)
+        refreshList()
+    }
+
+    /**
+     * 手动将指定 PWA 上移一位
+     */
+    suspend fun moveUp(id: Long) = withContext(Dispatchers.IO) {
+        ensureManualSortOrder()
+        val currentList = _pwaList.value.toMutableList()
+        val index = currentList.indexOfFirst { it.id == id }
+        if (index > 0) {
+            val item = currentList.removeAt(index)
+            currentList.add(index - 1, item)
+            persistListOrder(currentList)
+        }
+    }
+
+    /**
+     * 手动将指定 PWA 下移一位
+     */
+    suspend fun moveDown(id: Long) = withContext(Dispatchers.IO) {
+        ensureManualSortOrder()
+        val currentList = _pwaList.value.toMutableList()
+        val index = currentList.indexOfFirst { it.id == id }
+        if (index in 0 until currentList.size - 1) {
+            val item = currentList.removeAt(index)
+            currentList.add(index + 1, item)
+            persistListOrder(currentList)
+        }
+    }
+
+    /**
+     * 手动将指定 PWA 置顶到最前
+     */
+    suspend fun moveToTop(id: Long) = withContext(Dispatchers.IO) {
+        ensureManualSortOrder()
+        val currentList = _pwaList.value.toMutableList()
+        val index = currentList.indexOfFirst { it.id == id }
+        if (index > 0) {
+            val item = currentList.removeAt(index)
+            currentList.add(0, item)
+            persistListOrder(currentList)
+        }
+    }
+
+    private fun ensureManualSortOrder() {
+        val prefs = AppPreferences(context)
+        if (prefs.pwaSortOrder != PwaSortOrder.MANUAL) {
+            AppThemeState.setSortOrder(context, PwaSortOrder.MANUAL)
+        }
+    }
+
+    private fun persistListOrder(orderedList: List<PwaItem>) {
+        val batch = orderedList.mapIndexed { idx, pwa -> pwa.id to idx + 1 }
+        dbHelper.updateBatchSortOrders(batch)
+        refreshList()
     }
 
     suspend fun saveIconBitmap(bitmap: Bitmap, pwaId: Long): String = withContext(Dispatchers.IO) {

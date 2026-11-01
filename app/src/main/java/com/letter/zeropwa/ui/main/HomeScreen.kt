@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
@@ -59,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.letter.zeropwa.data.AppThemeState
 import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.ui.settings.SettingsActivity
 import java.io.File
@@ -73,8 +75,11 @@ fun HomeScreen(
     val inspectState by viewModel.inspectState.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
     var selectedActionPwa by remember { mutableStateOf<PwaItem?>(null) }
     var editingPwa by remember { mutableStateOf<PwaItem?>(null) }
+
+    val currentSortOrder by AppThemeState.pwaSortOrder.collectAsState()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -98,6 +103,13 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showSortDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Sort,
+                            contentDescription = "排序规则",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     IconButton(onClick = {
                         context.startActivity(Intent(context, SettingsActivity::class.java))
                     }) {
@@ -175,8 +187,22 @@ fun HomeScreen(
             onPinShortcut = { viewModel.createPinnedShortcut(context, pwa) },
             onToggleShortcut = { viewModel.togglePinnedToShortcuts(pwa) },
             onEdit = { editingPwa = pwa },
+            onMoveUp = { viewModel.movePwaUp(pwa.id) },
+            onMoveDown = { viewModel.movePwaDown(pwa.id) },
+            onMoveToTop = { viewModel.movePwaToTop(pwa.id) },
             onDelete = { viewModel.deletePwa(pwa.id) },
             onDismiss = { selectedActionPwa = null }
+        )
+    }
+
+    // 排序模式切换 BottomSheet
+    if (showSortDialog) {
+        SortOrderBottomSheet(
+            currentOrder = currentSortOrder,
+            onSelectOrder = { selected ->
+                viewModel.setSortOrder(selected)
+            },
+            onDismiss = { showSortDialog = false }
         )
     }
 

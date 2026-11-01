@@ -22,6 +22,7 @@ data class PwaItem(
     val allowMultipleWindows: Boolean = false,
     val openExternalLinksInBrowser: Boolean = true,
     val isPinnedToShortcuts: Boolean = false,
+    val sortOrder: Int = 0,
     val lastOpenedAt: Long = 0L,
     val createdAt: Long = System.currentTimeMillis()
 ) {
