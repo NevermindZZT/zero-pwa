@@ -24,6 +24,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
@@ -78,6 +79,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -87,6 +89,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.db.PwaRepository
 import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.data.parser.PwaManifestParser
@@ -95,7 +98,20 @@ import com.letter.zeropwa.ui.theme.ZeroPwaTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class PwaContainerActivity : ComponentActivity() {
+class PwaContainerActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        com.letter.zeropwa.data.AppLanguage.initialize(newBase)
+        super.attachBaseContext(newBase)
+    }
+
+    private val languageReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == com.letter.zeropwa.data.AppLanguage.ACTION_CHANGED) {
+                recreate()
+            }
+        }
+    }
 
     private var webView: WebView? = null
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
@@ -123,6 +139,14 @@ class PwaContainerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val filter = android.content.IntentFilter(com.letter.zeropwa.data.AppLanguage.ACTION_CHANGED)
+        androidx.core.content.ContextCompat.registerReceiver(
+            this,
+            languageReceiver,
+            filter,
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
 
         val pwaId = extractPwaId(intent)
         if (pwaId <= 0) {
@@ -259,7 +283,7 @@ class PwaContainerActivity : ComponentActivity() {
             finish()
         } else {
             lastBackPressTime = now
-            Toast.makeText(this, "再按一次退出应用", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.container_double_back_exit), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -334,16 +358,16 @@ class PwaContainerActivity : ComponentActivity() {
             val request = DownloadManager.Request(Uri.parse(url)).apply {
                 setMimeType(mimeType)
                 addRequestHeader("User-Agent", userAgent)
-                setDescription("正在下载文件...")
+                setDescription(getString(R.string.container_downloading))
                 setTitle(filename)
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
             }
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
-            Toast.makeText(this, "已开始下载: $filename", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.container_download_started, filename), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "创建下载失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.container_download_failed, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -402,6 +426,9 @@ class PwaContainerActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        try {
+            unregisterReceiver(languageReceiver)
+        } catch (_: Exception) {}
         webView?.let {
             it.stopLoading()
             (it.parent as? ViewGroup)?.removeView(it)
@@ -945,7 +972,7 @@ fun PwaContainerScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "网页加载失败",
+                                text = stringResource(R.string.container_page_failed),
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -960,7 +987,7 @@ fun PwaContainerScreen(
                                 errorMessage = null
                                 webViewRef?.reload()
                             }) {
-                                Text("重试")
+                                Text(stringResource(R.string.container_retry))
                             }
                         }
                     }
@@ -988,6 +1015,7 @@ fun PwaContainerScreen(
 
                 // 贴边灵动悬浮手柄 (支持单独按 PWA 配置开启/关闭，无操作自动半隐形，解决随时刷新与快捷操作需求)
                 if (currentPwa.enableFloatingToolHandle) {
+                    val browserFailMsg = stringResource(R.string.container_cannot_open_browser)
                     FloatingEdgeToolHandle(
                         onReload = { webViewRef?.reload() },
                         onGoHome = { webViewRef?.loadUrl(currentPwa.effectiveStartUrl) },
@@ -999,7 +1027,7 @@ fun PwaContainerScreen(
                                 )
                                 context.startActivity(intent)
                             } catch (_: Exception) {
-                                Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, browserFailMsg, Toast.LENGTH_SHORT).show()
                             }
                         },
                         currentUrl = { webViewRef?.url ?: currentUrl.ifBlank { currentPwa.effectiveStartUrl } }

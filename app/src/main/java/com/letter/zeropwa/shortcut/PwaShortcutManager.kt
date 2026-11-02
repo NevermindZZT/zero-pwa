@@ -67,16 +67,16 @@ object PwaShortcutManager {
             )
 
             if (requested) {
-                Toast.makeText(context, "已发送添加快捷方式请求", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.shortcut_toast_requested), Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "桌面未响应请求，请检查系统桌面快捷方式权限", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.shortcut_toast_desktop_unresponsive), Toast.LENGTH_LONG).show()
             }
             return requested
         } catch (se: SecurityException) {
-            Toast.makeText(context, "添加失败：请在系统应用设置中开启「桌面快捷方式」权限", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.shortcut_toast_permission), Toast.LENGTH_LONG).show()
             return false
         } catch (e: Throwable) {
-            Toast.makeText(context, "添加快捷方式异常: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, e.message.orEmpty(), Toast.LENGTH_SHORT).show()
             return false
         }
     }

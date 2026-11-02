@@ -1,4 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Zero PWA</string>
+    <string name="app_tagline">Any Website · Isolated Window · Native Experience</string>
+
+    <!-- Language -->
+    <string name="language_title">App language</string>
+    <string name="language_description">Choose an app language, or use your device language.</string>
+    <string name="language_system">System default</string>
+    <string name="language_chinese" translatable="false">简体中文</string>
+    <string name="language_english" translatable="false">English</string>
+
+    <!-- Theme -->
+    <string name="pref_theme_system">System</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+
+    <!-- Home Screen -->
+    <string name="home_empty_title">No PWA added yet</string>
+    <string name="home_empty_desc">Enter any website URL to extract Manifest\nand run in an isolated window with native feel</string>
+    <string name="home_add_first">Add Your First PWA</string>
+    <string name="home_add_fab">Add PWA</string>
+    <string name="home_badge_pinned">Pinned</string>
+    <string name="home_chip_standalone">Standalone</string>
+    <string name="home_chip_fullscreen">Fullscreen</string>
+    <string name="home_chip_minimal_ui">Toolbar</string>
+    <string name="home_chip_desktop">Desktop</string>
+
+    <!-- Action Bottom Sheet -->
+    <string name="action_launch">Run in Isolated Window</string>
+    <string name="action_pin_shortcut">Add Home Screen Shortcut</string>
+    <string name="action_pin_shortcut_desc">Create a dedicated adaptive icon on your home screen</string>
+    <string name="action_toggle_shortcut">Pin to App Shortcut Menu</string>
+    <string name="action_shortcut_pinned">Pinned in launcher shortcut menu</string>
+    <string name="action_shortcut_unpinned">Launch PWA directly from app icon long-press</string>
+    <string name="action_move_to_top">Move to Top</string>
+    <string name="action_move_to_top_desc">Pin to first position; will not drift upon launch</string>
+    <string name="action_move_up">Move Up</string>
+    <string name="action_move_down">Move Down</string>
+    <string name="action_edit">Edit Configuration</string>
+    <string name="action_edit_desc">Adjust display mode, UA emulation &amp; start URL</string>
+    <string name="action_delete">Delete this PWA</string>
+    <string name="action_delete_confirm_title">Delete this PWA?</string>
+    <string name="action_delete_confirm_desc">This configuration and local icon cache will be removed. Existing home screen shortcuts will also become invalid.</string>
+    <string name="action_delete_confirm_btn">Delete</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Add & Edit Dialogs -->
+    <string name="dialog_add_title">Add Website as PWA</string>
+    <string name="dialog_add_subtitle">Extract website metadata and run in isolated window</string>
+    <string name="dialog_edit_title">Configure PWA Settings</string>
+    <string name="dialog_edit_subtitle">Adjust running mode, browser UA and system shortcuts</string>
+    <string name="dialog_url_label">Website URL</string>
+    <string name="dialog_url_placeholder">https://example.com</string>
+    <string name="dialog_name_label">App Name</string>
+    <string name="dialog_start_url_label">Start URL</string>
+    <string name="dialog_inspect_btn">Inspect Website</string>
+    <string name="dialog_inspecting">Inspecting Manifest and extracting icons...</string>
+    <string name="dialog_window_mode">Window Running Mode</string>
+    <string name="dialog_ua_mode">Device Emulation (User-Agent)</string>
+    <string name="dialog_ua_mobile">Mobile (Default)</string>
+    <string name="dialog_ua_desktop">Desktop PC</string>
+    <string name="dialog_status_bar_style">Status Bar Text &amp; Icon Style</string>
+    <string name="dialog_status_bar_auto">Smart Auto</string>
+    <string name="dialog_status_bar_dark">Dark (Black)</string>
+    <string name="dialog_status_bar_light">Light (White)</string>
+    <string name="dialog_opt_floating_handle">Floating Edge Tool Handle</string>
+    <string name="dialog_opt_floating_handle_desc">Semi-transparent edge pill for instant reload and navigation</string>
+    <string name="dialog_opt_splash">Branded Splash Screen</string>
+    <string name="dialog_opt_splash_desc">Branded transition before first frame to eliminate white screens</string>
+    <string name="dialog_opt_immersive">Immersive Status Bar</string>
+    <string name="dialog_opt_immersive_desc">Content penetrates under status bar; disable to isolate safe area</string>
+    <string name="dialog_opt_multi_window">Multi-Window Concurrent</string>
+    <string name="dialog_opt_multi_window_desc">Default off (single window: re-clicking switches to existing window)</string>
+    <string name="dialog_opt_long_press">Pin to App Shortcut Menu</string>
+    <string name="dialog_opt_long_press_desc">Add to dynamic shortcut menu on launcher</string>
+    <string name="dialog_opt_open_external">Open External Links in Browser</string>
+    <string name="dialog_opt_open_external_desc">Out-of-scope links handled by system default browser</string>
+    <string name="dialog_confirm_add">Add as PWA</string>
+    <string name="dialog_confirm_save">Save Changes</string>
+
+    <!-- Theme Color Picker -->
+    <string name="theme_color_title">Theme Color</string>
+    <string name="theme_color_desc">Used for status bar, window title &amp; task card coloring</string>
+    <string name="theme_color_restore">Restore Extracted</string>
+    <string name="theme_color_custom_code">Custom Color Code</string>
+    <string name="theme_color_presets">Recommended Color Presets</string>
+    <string name="theme_color_extracted_tag">Extracted Color</string>
+    <string name="theme_color_custom_tag">Custom Color</string>
+
+    <!-- Sort Order -->
+    <string name="sort_order_title">List Sort Order</string>
+    <string name="sort_order_desc">Fixed manual ordering by default to prevent position drift</string>
+    <string name="sort_manual">Custom Order</string>
+    <string name="sort_manual_desc">Fixed position; reorder manually or pin to top in action menu</string>
+    <string name="sort_last_opened">Recently Used</string>
+    <string name="sort_last_opened_desc">Automatically places recently used apps at the top</string>
+    <string name="sort_name">App Name (A-Z)</string>
+    <string name="sort_name_desc">Alphabetical order by app name</string>
+    <string name="sort_created_at">Creation Time</string>
+    <string name="sort_created_at_desc">Order by the time app was added</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance &amp; Theme</string>
+    <string name="settings_theme_mode">Dark / Light Theme Mode</string>
+    <string name="settings_dynamic_color">Dynamic Wallpaper Color (Material You)</string>
+    <string name="settings_dynamic_color_desc">Generate interface color palette based on system wallpaper</string>
+    <string name="settings_dynamic_color_req">Requires Android 12 or above</string>
+    <string name="settings_pwa_defaults">PWA Global Defaults</string>
+    <string name="settings_def_immersive">Enable Immersive Status Bar by Default</string>
+    <string name="settings_def_immersive_desc">Content penetrates under status bar for unbounded immersion</string>
+    <string name="settings_def_floating">Enable Floating Tool Handle by Default</string>
+    <string name="settings_def_floating_desc">Semi-transparent edge handle for instant reload and navigation</string>
+    <string name="settings_def_splash">Enable Branded Splash Screen by Default</string>
+    <string name="settings_def_splash_desc">Branded transition before first frame to eliminate white screens</string>
+    <string name="settings_def_multi_window">Multi-Window Concurrent Mode</string>
+    <string name="settings_def_multi_window_desc">Default off (re-clicking an opened PWA reuses existing window)</string>
+    <string name="settings_def_sort_order">Default Sort Order</string>
+    <string name="settings_def_sort_order_desc">Default manual order prevents apps from drifting upon launch</string>
+    <string name="settings_bg_keepalive">Background &amp; Network Keep-Alive</string>
+    <string name="settings_ignore_battery">Allow Background Network (Ignore Battery Optimization)</string>
+    <string name="settings_ignore_battery_active">Unrestricted</string>
+    <string name="settings_ignore_battery_active_desc">System Doze sleep lifted; background network and sockets kept active</string>
+    <string name="settings_ignore_battery_inactive_desc">Click to request whitelist to prevent sockets from being killed in background</string>
+    <string name="settings_pulse_title">Foreground Reconnect Pulse</string>
+    <string name="settings_pulse_desc">Proactively dispatches reconnect pulses when returning to foreground</string>
+    <string name="settings_built_in">Built-in</string>
+    <string name="settings_about">About Project</string>
+    <string name="settings_repo_title">Open Source Repository</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_arch">Tech Stack</string>
+    <string name="settings_build_env">Build Environment</string>
+    <string name="settings_license">Open Source License</string>
+    <string name="settings_repo_copied">Repository link copied to clipboard</string>
+    <string name="settings_battery_active_toast">Background execution is unrestricted</string>
+
+    <!-- Container, Splash & Floating Handle -->
+    <string name="splash_timeout_tip">Website response is slow; network latency may exist</string>
+    <string name="splash_retry">Retry</string>
+    <string name="splash_skip">Skip</string>
+    <string name="container_page_failed">Page Failed to Load</string>
+    <string name="container_retry">Retry</string>
+    <string name="container_downloading">Downloading file...</string>
+    <string name="container_download_started">Started download: %1$s</string>
+    <string name="container_download_failed">Download creation failed: %1$s</string>
+    <string name="container_link_copied">Link copied</string>
+    <string name="container_cannot_open_browser">Unable to open browser</string>
+    <string name="container_double_back_exit">Press back again to exit</string>
+    <string name="container_invalid_pwa">Invalid PWA identifier</string>
+    <string name="shortcut_toast_requested">Shortcut request sent</string>
+    <string name="shortcut_toast_unsupported">Launcher does not support pinned shortcuts</string>
+    <string name="shortcut_toast_permission">Failed: please grant shortcut permission in system app settings</string>
+    <string name="shortcut_toast_desktop_unresponsive">Launcher did not respond, please check shortcut permissions</string>
+    <string name="handle_tip">Tap to open tools, drag to adjust position</string>
+    <string name="handle_refresh">Refresh Page</string>
+    <string name="handle_home">Home</string>
+    <string name="handle_copy">Copy Link</string>
+    <string name="handle_browser">Open in Browser</string>
+    <string name="handle_close">Close Tools</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_paste">Paste</string>
 </resources>

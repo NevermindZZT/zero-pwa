@@ -39,8 +39,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.model.PwaItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,18 +92,18 @@ fun EditPwaDialog(
             ) {
                 Column {
                     Text(
-                        text = "配置 PWA 参数",
+                        text = stringResource(R.string.dialog_edit_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "调整运行模式、浏览器标识及系统快捷入口",
+                        text = stringResource(R.string.dialog_edit_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "关闭")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_cancel))
                 }
             }
 
@@ -109,7 +111,7 @@ fun EditPwaDialog(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("应用名称") },
+                label = { Text(stringResource(R.string.dialog_name_label)) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -119,7 +121,7 @@ fun EditPwaDialog(
             OutlinedTextField(
                 value = startUrl,
                 onValueChange = { startUrl = it },
-                label = { Text("启动网址 (Start URL)") },
+                label = { Text(stringResource(R.string.dialog_start_url_label)) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -135,7 +137,7 @@ fun EditPwaDialog(
             // 运行模式 Chip
             Column {
                 Text(
-                    text = "窗口运行模式",
+                    text = stringResource(R.string.dialog_window_mode),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -148,7 +150,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = displayMode == PwaItem.DISPLAY_STANDALONE,
                         onClick = { displayMode = PwaItem.DISPLAY_STANDALONE },
-                        label = { Text("独立应用") },
+                        label = { Text(stringResource(R.string.home_chip_standalone)) },
                         leadingIcon = if (displayMode == PwaItem.DISPLAY_STANDALONE) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -156,7 +158,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = displayMode == PwaItem.DISPLAY_FULLSCREEN,
                         onClick = { displayMode = PwaItem.DISPLAY_FULLSCREEN },
-                        label = { Text("沉浸全屏") },
+                        label = { Text(stringResource(R.string.home_chip_fullscreen)) },
                         leadingIcon = if (displayMode == PwaItem.DISPLAY_FULLSCREEN) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -164,7 +166,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = displayMode == PwaItem.DISPLAY_MINIMAL_UI,
                         onClick = { displayMode = PwaItem.DISPLAY_MINIMAL_UI },
-                        label = { Text("操作栏") },
+                        label = { Text(stringResource(R.string.home_chip_minimal_ui)) },
                         leadingIcon = if (displayMode == PwaItem.DISPLAY_MINIMAL_UI) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -175,7 +177,7 @@ fun EditPwaDialog(
             // 浏览器 User-Agent Chip
             Column {
                 Text(
-                    text = "设备仿真 (User-Agent)",
+                    text = stringResource(R.string.dialog_ua_mode),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -188,7 +190,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = userAgentMode == PwaItem.UA_DEFAULT,
                         onClick = { userAgentMode = PwaItem.UA_DEFAULT },
-                        label = { Text("移动端 (默认)") },
+                        label = { Text(stringResource(R.string.dialog_ua_mobile)) },
                         leadingIcon = if (userAgentMode == PwaItem.UA_DEFAULT) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -196,7 +198,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = userAgentMode == PwaItem.UA_DESKTOP,
                         onClick = { userAgentMode = PwaItem.UA_DESKTOP },
-                        label = { Text("电脑桌面版") },
+                        label = { Text(stringResource(R.string.dialog_ua_desktop)) },
                         leadingIcon = if (userAgentMode == PwaItem.UA_DESKTOP) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -207,7 +209,7 @@ fun EditPwaDialog(
             // 状态栏图标与文字风格
             Column {
                 Text(
-                    text = "状态栏文字与图标风格",
+                    text = stringResource(R.string.dialog_status_bar_style),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -220,7 +222,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = iconMode == PwaItem.STATUS_BAR_ICON_AUTO,
                         onClick = { iconMode = PwaItem.STATUS_BAR_ICON_AUTO },
-                        label = { Text("智能适配") },
+                        label = { Text(stringResource(R.string.dialog_status_bar_auto)) },
                         leadingIcon = if (iconMode == PwaItem.STATUS_BAR_ICON_AUTO) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -228,7 +230,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = iconMode == PwaItem.STATUS_BAR_ICON_DARK,
                         onClick = { iconMode = PwaItem.STATUS_BAR_ICON_DARK },
-                        label = { Text("深色字 (黑)") },
+                        label = { Text(stringResource(R.string.dialog_status_bar_dark)) },
                         leadingIcon = if (iconMode == PwaItem.STATUS_BAR_ICON_DARK) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -236,7 +238,7 @@ fun EditPwaDialog(
                     FilterChip(
                         selected = iconMode == PwaItem.STATUS_BAR_ICON_LIGHT,
                         onClick = { iconMode = PwaItem.STATUS_BAR_ICON_LIGHT },
-                        label = { Text("浅色字 (白)") },
+                        label = { Text(stringResource(R.string.dialog_status_bar_light)) },
                         leadingIcon = if (iconMode == PwaItem.STATUS_BAR_ICON_LIGHT) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null
@@ -260,8 +262,8 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("贴边悬浮工具手柄", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("平时贴边半隐形不遮挡，轻触随时刷新网页与主页导航", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.dialog_opt_floating_handle), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.dialog_opt_floating_handle_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = enableFloatingHandle, onCheckedChange = { enableFloatingHandle = it })
                     }
@@ -274,8 +276,8 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("品牌启动过渡屏", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("首帧加载前展示专属主题色与图标过渡，消除白屏等待感", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.dialog_opt_splash), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.dialog_opt_splash_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = enableSplash, onCheckedChange = { enableSplash = it })
                     }
@@ -288,8 +290,8 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("状态栏沉浸模式", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("开启后内容延伸穿透状态栏；关闭则保留安全区隔离", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.dialog_opt_immersive), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.dialog_opt_immersive_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = enableImmersive, onCheckedChange = { enableImmersive = it })
                     }
@@ -302,8 +304,8 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("允许多任务窗口并发", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("默认关闭（单窗口：再次点击复用已打开窗口）", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.dialog_opt_multi_window), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.dialog_opt_multi_window_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = allowMultipleWindows, onCheckedChange = { allowMultipleWindows = it })
                     }
@@ -316,8 +318,8 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("长按应用图标直接打开", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("加入桌面图标长按弹出的快捷菜单", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.dialog_opt_long_press), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.dialog_opt_long_press_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = isPinned, onCheckedChange = { isPinned = it })
                     }
@@ -330,8 +332,8 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("外部链接调用系统浏览器", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("离开本站范围的链接由系统默认浏览器接管", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.dialog_opt_open_external), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.dialog_opt_open_external_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = openExternal, onCheckedChange = { openExternal = it })
                     }
@@ -368,7 +370,7 @@ fun EditPwaDialog(
                 )
             ) {
                 Text(
-                    text = "保存配置修改",
+                    text = stringResource(R.string.dialog_confirm_save),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

@@ -43,10 +43,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.parser.PwaManifestParser
 
 @Composable
@@ -99,13 +101,13 @@ fun ThemeColorPickerSection(
         ) {
             Column {
                 Text(
-                    text = "主题颜色 (Theme Color)",
+                    text = stringResource(R.string.theme_color_title),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "用于状态栏、窗口标题及系统多任务卡片着色",
+                    text = stringResource(R.string.theme_color_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -115,7 +117,7 @@ fun ThemeColorPickerSection(
             if (extractedColor != null && selectedColor != extractedColor) {
                 AssistChip(
                     onClick = { onColorChanged(extractedColor) },
-                    label = { Text("恢复提取色", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(stringResource(R.string.theme_color_restore), style = MaterialTheme.typography.labelSmall) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Restore,
@@ -160,7 +162,7 @@ fun ThemeColorPickerSection(
                     if (selectedColor == null) {
                         Icon(
                             imageVector = Icons.Default.FormatColorReset,
-                            contentDescription = "未设置",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
@@ -196,7 +198,7 @@ fun ThemeColorPickerSection(
                             }
                         }
                     },
-                    label = { Text("自定义颜色代码") },
+                    label = { Text(stringResource(R.string.theme_color_custom_code)) },
                     placeholder = { Text("#24695C 或 rgb(...)") },
                     singleLine = true,
                     isError = !isHexValid,
@@ -212,7 +214,7 @@ fun ThemeColorPickerSection(
 
         // 快捷推荐调色板 (水平滚动圆点)
         Text(
-            text = "推荐预设色盘",
+            text = stringResource(R.string.theme_color_presets),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

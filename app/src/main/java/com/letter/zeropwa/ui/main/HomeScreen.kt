@@ -56,10 +56,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.AppThemeState
 import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.ui.settings.SettingsActivity
@@ -92,11 +94,11 @@ fun HomeScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Zero PWA",
+                            text = stringResource(R.string.app_name),
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "任意网站 · 独立窗口 · 原生体验",
+                            text = stringResource(R.string.app_tagline),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -106,7 +108,7 @@ fun HomeScreen(
                     IconButton(onClick = { showSortDialog = true }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Sort,
-                            contentDescription = "排序规则",
+                            contentDescription = stringResource(R.string.sort_order_title),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -115,7 +117,7 @@ fun HomeScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "设置",
+                            contentDescription = stringResource(R.string.settings_title),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -135,7 +137,7 @@ fun HomeScreen(
                     showAddDialog = true
                 },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("添加 PWA", fontWeight = FontWeight.SemiBold) },
+                text = { Text(stringResource(R.string.home_add_fab), fontWeight = FontWeight.SemiBold) },
                 elevation = FloatingActionButtonDefaults.elevation(
                     defaultElevation = 0.dp,
                     pressedElevation = 0.dp,
@@ -334,7 +336,7 @@ fun PwaItemCard(
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "长按置顶",
+                                text = stringResource(R.string.home_badge_pinned),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontWeight = FontWeight.Medium
@@ -355,9 +357,9 @@ fun PwaItemCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val modeLabel = when (pwa.displayMode) {
-                        PwaItem.DISPLAY_FULLSCREEN -> "沉浸全屏"
-                        PwaItem.DISPLAY_MINIMAL_UI -> "带操作栏"
-                        else -> "独立应用"
+                        PwaItem.DISPLAY_FULLSCREEN -> stringResource(R.string.home_chip_fullscreen)
+                        PwaItem.DISPLAY_MINIMAL_UI -> stringResource(R.string.home_chip_minimal_ui)
+                        else -> stringResource(R.string.home_chip_standalone)
                     }
                     SuggestionChip(
                         onClick = onClick,
@@ -371,7 +373,7 @@ fun PwaItemCard(
                     if (pwa.userAgentMode == PwaItem.UA_DESKTOP) {
                         SuggestionChip(
                             onClick = onClick,
-                            label = { Text("电脑版", style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(stringResource(R.string.home_chip_desktop), style = MaterialTheme.typography.labelSmall) },
                             shape = RoundedCornerShape(8.dp),
                             colors = SuggestionChipDefaults.suggestionChipColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f)
@@ -386,7 +388,7 @@ fun PwaItemCard(
             IconButton(onClick = onMoreClick) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "更多操作选项",
+                    contentDescription = stringResource(R.string.action_edit),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -421,13 +423,13 @@ fun EmptyStateView(onAddClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "尚未添加任何 PWA 网站",
+            text = stringResource(R.string.home_empty_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "输入任意网站地址，自动提取 Manifest\n并以独立任务窗口畅享原生体验",
+            text = stringResource(R.string.home_empty_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -443,7 +445,7 @@ fun EmptyStateView(onAddClick: () -> Unit) {
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("立即添加第一个 PWA", fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.home_add_first), fontWeight = FontWeight.SemiBold)
         }
     }
 }

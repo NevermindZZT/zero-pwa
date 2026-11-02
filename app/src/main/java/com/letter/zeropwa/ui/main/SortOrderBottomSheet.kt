@@ -22,8 +22,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.PwaSortOrder
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,12 +54,12 @@ fun SortOrderBottomSheet(
         ) {
             Column {
                 Text(
-                    text = "首页列表排序规则",
+                    text = stringResource(R.string.sort_order_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "默认使用固定手动排序，打开应用不会打乱列表位置",
+                    text = stringResource(R.string.sort_order_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -73,11 +75,17 @@ fun SortOrderBottomSheet(
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
                     PwaSortOrder.entries.forEachIndexed { index, order ->
                         val isSelected = currentOrder == order
+                        val title = when (order) {
+                            PwaSortOrder.MANUAL -> stringResource(R.string.sort_manual)
+                            PwaSortOrder.LAST_OPENED -> stringResource(R.string.sort_last_opened)
+                            PwaSortOrder.NAME -> stringResource(R.string.sort_name)
+                            PwaSortOrder.CREATED_AT -> stringResource(R.string.sort_created_at)
+                        }
                         val subtitle = when (order) {
-                            PwaSortOrder.MANUAL -> "位置固定不漂移，支持在更多操作中手动上下移动或置顶"
-                            PwaSortOrder.LAST_OPENED -> "每次打开过的应用自动置于首位"
-                            PwaSortOrder.NAME -> "按照应用名称拼音与英文字母顺序排列"
-                            PwaSortOrder.CREATED_AT -> "按照添加该应用的时间先后排列"
+                            PwaSortOrder.MANUAL -> stringResource(R.string.sort_manual_desc)
+                            PwaSortOrder.LAST_OPENED -> stringResource(R.string.sort_last_opened_desc)
+                            PwaSortOrder.NAME -> stringResource(R.string.sort_name_desc)
+                            PwaSortOrder.CREATED_AT -> stringResource(R.string.sort_created_at_desc)
                         }
 
                         Row(
@@ -100,7 +108,7 @@ fun SortOrderBottomSheet(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = order.label,
+                                    text = title,
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -125,3 +133,4 @@ fun SortOrderBottomSheet(
         }
     }
 }
+

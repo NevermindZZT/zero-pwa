@@ -50,10 +50,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.model.PwaItem
 import java.io.File
 
@@ -163,7 +165,7 @@ fun PwaActionBottomSheet(
                 ) {
                     Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null)
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text("以独立窗口运行", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.action_launch), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
 
                 // 2. 菜单操作胶囊列表 (无任何深黑阴影，遵循 M3 色调容器规范)
@@ -176,8 +178,8 @@ fun PwaActionBottomSheet(
                         // 添加桌面快捷方式
                         ActionMenuItem(
                             icon = Icons.AutoMirrored.Filled.Shortcut,
-                            title = "添加桌面快捷方式",
-                            subtitle = "在手机桌面上生成专属独立图标",
+                            title = stringResource(R.string.action_pin_shortcut),
+                            subtitle = stringResource(R.string.action_pin_shortcut_desc),
                             onClick = {
                                 onDismiss()
                                 onPinShortcut()
@@ -218,12 +220,12 @@ fun PwaActionBottomSheet(
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "置顶到长按图标快捷菜单",
+                                    text = stringResource(R.string.action_toggle_shortcut),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = if (isPinned) "已在桌面长按快捷菜单中置顶" else "长按主图标直接呼出该 PWA",
+                                    text = if (isPinned) stringResource(R.string.action_shortcut_pinned) else stringResource(R.string.action_shortcut_unpinned),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -245,8 +247,8 @@ fun PwaActionBottomSheet(
                         // 排序调整项
                         ActionMenuItem(
                             icon = Icons.Default.VerticalAlignTop,
-                            title = "移动到首页第一位",
-                            subtitle = "设为固定排序首位，不再随使用动态漂移",
+                            title = stringResource(R.string.action_move_to_top),
+                            subtitle = stringResource(R.string.action_move_to_top_desc),
                             onClick = {
                                 onDismiss()
                                 onMoveToTop()
@@ -274,7 +276,7 @@ fun PwaActionBottomSheet(
                             ) {
                                 Icon(Icons.Default.ArrowUpward, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("上移一位")
+                                Text(stringResource(R.string.action_move_up))
                             }
 
                             FilledTonalButton(
@@ -287,7 +289,7 @@ fun PwaActionBottomSheet(
                             ) {
                                 Icon(Icons.Default.ArrowDownward, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("下移一位")
+                                Text(stringResource(R.string.action_move_down))
                             }
                         }
 
@@ -299,8 +301,8 @@ fun PwaActionBottomSheet(
                         // 编辑配置
                         ActionMenuItem(
                             icon = Icons.Default.Edit,
-                            title = "编辑参数配置",
-                            subtitle = "修改显示模式、UA 仿真与启动路径",
+                            title = stringResource(R.string.action_edit),
+                            subtitle = stringResource(R.string.action_edit_desc),
                             onClick = {
                                 onDismiss()
                                 onEdit()
@@ -328,7 +330,7 @@ fun PwaActionBottomSheet(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "删除此 PWA",
+                            text = stringResource(R.string.action_delete),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.error
@@ -347,13 +349,13 @@ fun PwaActionBottomSheet(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "确认删除该 PWA？",
+                            text = stringResource(R.string.action_delete_confirm_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
                         Text(
-                            text = "删除后将移除该配置并清理本地图标缓存，桌面已有的快捷方式也将失效。",
+                            text = stringResource(R.string.action_delete_confirm_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f)
                         )
@@ -363,7 +365,7 @@ fun PwaActionBottomSheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             TextButton(onClick = { showDeleteConfirm = false }) {
-                                Text("取消", color = MaterialTheme.colorScheme.onErrorContainer)
+                                Text(stringResource(R.string.action_cancel), color = MaterialTheme.colorScheme.onErrorContainer)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
@@ -376,7 +378,7 @@ fun PwaActionBottomSheet(
                                     contentColor = MaterialTheme.colorScheme.onError
                                 )
                             ) {
-                                Text("确认删除")
+                                Text(stringResource(R.string.action_delete_confirm_btn))
                             }
                         }
                     }

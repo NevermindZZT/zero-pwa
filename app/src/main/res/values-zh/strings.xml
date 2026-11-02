@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zero PWA</string>
+    <string name="app_tagline">任意网站 · 独立窗口 · 原生体验</string>
+
+    <!-- Language -->
+    <string name="language_title">应用语言</string>
+    <string name="language_description">选择应用语言，或跟随设备的系统语言。</string>
+    <string name="language_system">跟随系统</string>
+    <string name="language_chinese" translatable="false">简体中文</string>
+    <string name="language_english" translatable="false">English</string>
+
+    <!-- Theme -->
+    <string name="pref_theme_system">跟随系统</string>
+    <string name="pref_theme_light">浅色模式</string>
+    <string name="pref_theme_dark">深色模式</string>
+
+    <!-- Home Screen -->
+    <string name="home_empty_title">尚未添加任何 PWA 网站</string>
+    <string name="home_empty_desc">输入任意网站地址，自动提取 Manifest\n并以独立任务窗口畅享原生体验</string>
+    <string name="home_add_first">立即添加第一个 PWA</string>
+    <string name="home_add_fab">添加 PWA</string>
+    <string name="home_badge_pinned">长按置顶</string>
+    <string name="home_chip_standalone">独立应用</string>
+    <string name="home_chip_fullscreen">沉浸全屏</string>
+    <string name="home_chip_minimal_ui">带操作栏</string>
+    <string name="home_chip_desktop">电脑版</string>
+
+    <!-- Action Bottom Sheet -->
+    <string name="action_launch">以独立窗口运行</string>
+    <string name="action_pin_shortcut">添加桌面快捷方式</string>
+    <string name="action_pin_shortcut_desc">在手机桌面上生成专属独立图标</string>
+    <string name="action_toggle_shortcut">置顶到长按图标快捷菜单</string>
+    <string name="action_shortcut_pinned">已在桌面长按快捷菜单中置顶</string>
+    <string name="action_shortcut_unpinned">长按主图标直接呼出该 PWA</string>
+    <string name="action_move_to_top">移动到首页第一位</string>
+    <string name="action_move_to_top_desc">设为固定排序首位，不再随使用动态漂移</string>
+    <string name="action_move_up">上移一位</string>
+    <string name="action_move_down">下移一位</string>
+    <string name="action_edit">编辑参数配置</string>
+    <string name="action_edit_desc">修改显示模式、UA 仿真与启动路径</string>
+    <string name="action_delete">删除此 PWA</string>
+    <string name="action_delete_confirm_title">确认删除该 PWA？</string>
+    <string name="action_delete_confirm_desc">删除后将移除该配置并清理本地图标缓存，桌面已有的快捷方式也将失效。</string>
+    <string name="action_delete_confirm_btn">确认删除</string>
+    <string name="action_cancel">取消</string>
+
+    <!-- Add & Edit Dialogs -->
+    <string name="dialog_add_title">添加网站为 PWA</string>
+    <string name="dialog_add_subtitle">自动提取网站元数据并独立窗口运行</string>
+    <string name="dialog_edit_title">配置 PWA 参数</string>
+    <string name="dialog_edit_subtitle">调整运行模式、浏览器标识及系统快捷入口</string>
+    <string name="dialog_url_label">网站地址 (URL)</string>
+    <string name="dialog_url_placeholder">https://example.com</string>
+    <string name="dialog_name_label">应用名称</string>
+    <string name="dialog_start_url_label">启动网址 (Start URL)</string>
+    <string name="dialog_inspect_btn">分析网站配置</string>
+    <string name="dialog_inspecting">正在探测 Manifest 与提取图标...</string>
+    <string name="dialog_window_mode">窗口运行模式</string>
+    <string name="dialog_ua_mode">设备仿真 (User-Agent)</string>
+    <string name="dialog_ua_mobile">移动版 (默认)</string>
+    <string name="dialog_ua_desktop">电脑桌面版</string>
+    <string name="dialog_status_bar_style">状态栏文字与图标风格</string>
+    <string name="dialog_status_bar_auto">智能适配</string>
+    <string name="dialog_status_bar_dark">深色字 (黑)</string>
+    <string name="dialog_status_bar_light">浅色字 (白)</string>
+    <string name="dialog_opt_floating_handle">贴边悬浮工具手柄</string>
+    <string name="dialog_opt_floating_handle_desc">平时贴边半隐形不遮挡，轻触随时刷新网页与主页导航</string>
+    <string name="dialog_opt_splash">品牌启动过渡屏</string>
+    <string name="dialog_opt_splash_desc">首帧加载前展示专属主题色与图标过渡，消除白屏等待感</string>
+    <string name="dialog_opt_immersive">状态栏沉浸模式</string>
+    <string name="dialog_opt_immersive_desc">开启后内容延伸穿透状态栏；关闭则保留安全区隔离</string>
+    <string name="dialog_opt_multi_window">允许多任务窗口并发</string>
+    <string name="dialog_opt_multi_window_desc">默认关闭（单窗口：再次点击复用已打开窗口）</string>
+    <string name="dialog_opt_long_press">长按应用图标直接打开</string>
+    <string name="dialog_opt_long_press_desc">加入桌面图标长按弹出的快捷菜单</string>
+    <string name="dialog_opt_open_external">外部链接调用系统浏览器</string>
+    <string name="dialog_opt_open_external_desc">离开本站范围的链接由系统默认浏览器接管</string>
+    <string name="dialog_confirm_add">确认添加为此 PWA</string>
+    <string name="dialog_confirm_save">保存配置修改</string>
+
+    <!-- Theme Color Picker -->
+    <string name="theme_color_title">主题颜色 (Theme Color)</string>
+    <string name="theme_color_desc">用于状态栏、窗口标题及系统多任务卡片着色</string>
+    <string name="theme_color_restore">恢复提取色</string>
+    <string name="theme_color_custom_code">自定义颜色代码</string>
+    <string name="theme_color_presets">推荐预设色盘</string>
+    <string name="theme_color_extracted_tag">提取主题色</string>
+    <string name="theme_color_custom_tag">自定义主题色</string>
+
+    <!-- Sort Order -->
+    <string name="sort_order_title">首页列表排序规则</string>
+    <string name="sort_order_desc">默认使用固定手动排序，打开应用不会打乱列表位置</string>
+    <string name="sort_manual">自定义排序</string>
+    <string name="sort_manual_desc">位置固定不漂移，支持在更多操作中手动上下移动或置顶</string>
+    <string name="sort_last_opened">最近使用优先</string>
+    <string name="sort_last_opened_desc">每次打开过的应用自动置于首位</string>
+    <string name="sort_name">应用名称 (A-Z)</string>
+    <string name="sort_name_desc">按照应用名称拼音与英文字母顺序排列</string>
+    <string name="sort_created_at">创建时间优先</string>
+    <string name="sort_created_at_desc">按照添加该应用的时间先后排列</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">设置</string>
+    <string name="settings_appearance">外观与主题</string>
+    <string name="settings_theme_mode">深浅色主题模式</string>
+    <string name="settings_dynamic_color">动态壁纸取色 (Material You)</string>
+    <string name="settings_dynamic_color_desc">根据系统壁纸调色板实时生成界面配色</string>
+    <string name="settings_dynamic_color_req">需要 Android 12 及以上系统版本支持</string>
+    <string name="settings_pwa_defaults">PWA 全局偏好</string>
+    <string name="settings_def_immersive">新建时默认开启状态栏沉浸</string>
+    <string name="settings_def_immersive_desc">网页内容默认延伸穿透状态栏，带来更强的无界沉浸感</string>
+    <string name="settings_def_floating">新建时默认开启悬浮工具手柄</string>
+    <string name="settings_def_floating_desc">贴边半隐形微手柄，提供随时刷新网页与快捷导航功能</string>
+    <string name="settings_def_splash">新建时默认开启品牌启动过渡屏</string>
+    <string name="settings_def_splash_desc">首帧加载前展示专属主题色与图标过渡，消除白屏等待感</string>
+    <string name="settings_def_multi_window">多窗口并发模式</string>
+    <string name="settings_def_multi_window_desc">默认关闭（再次点击已打开的 PWA 会激活复用已有窗口）</string>
+    <string name="settings_def_sort_order">首页列表默认排序规则</string>
+    <string name="settings_def_sort_order_desc">默认使用自定义排序，打开应用不会打乱列表位置</string>
+    <string name="settings_bg_keepalive">后台运行与网络保活</string>
+    <string name="settings_ignore_battery">允许后台网络与长连接 (忽略电池优化)</string>
+    <string name="settings_ignore_battery_active">不受限</string>
+    <string name="settings_ignore_battery_active_desc">已解除系统 Doze 深度打盹，后台网络与 Socket 维持畅通</string>
+    <string name="settings_ignore_battery_inactive_desc">点击申请系统白名单，防止切到后台时长连接被系统切断</string>
+    <string name="settings_pulse_title">切回前台长连接自愈脉冲</string>
+    <string name="settings_pulse_desc">切回前台时主动派发重连脉冲，加速断开的 WebSocket 瞬间恢复</string>
+    <string name="settings_built_in">容器内置</string>
+    <string name="settings_about">关于项目</string>
+    <string name="settings_repo_title">开源项目主页</string>
+    <string name="settings_developer">开发者</string>
+    <string name="settings_arch">技术架构</string>
+    <string name="settings_build_env">构建环境</string>
+    <string name="settings_license">开源协议</string>
+    <string name="settings_repo_copied">仓库链接已复制到剪贴板</string>
+    <string name="settings_battery_active_toast">已开启后台运行不受限</string>
+
+    <!-- Container, Splash & Floating Handle -->
+    <string name="splash_timeout_tip">网站响应较慢，可能存在弱网或连接延迟</string>
+    <string name="splash_retry">刷新重试</string>
+    <string name="splash_skip">跳过等待</string>
+    <string name="container_page_failed">网页加载失败</string>
+    <string name="container_retry">重试</string>
+    <string name="container_downloading">正在下载文件...</string>
+    <string name="container_download_started">已开始下载: %1$s</string>
+    <string name="container_download_failed">创建下载失败: %1$s</string>
+    <string name="container_link_copied">链接已复制</string>
+    <string name="container_cannot_open_browser">无法打开浏览器</string>
+    <string name="container_double_back_exit">再按一次退出应用</string>
+    <string name="container_invalid_pwa">无效的 PWA 标识</string>
+    <string name="shortcut_toast_requested">已发送添加快捷方式请求</string>
+    <string name="shortcut_toast_unsupported">当前桌面启动器不支持添加桌面快捷方式</string>
+    <string name="shortcut_toast_permission">添加失败：请在系统应用设置中开启「桌面快捷方式」权限</string>
+    <string name="shortcut_toast_desktop_unresponsive">桌面未响应请求，请检查系统桌面快捷方式权限</string>
+    <string name="handle_tip">打开网页工具，拖动调整位置</string>
+    <string name="handle_refresh">刷新网页</string>
+    <string name="handle_home">返回主页</string>
+    <string name="handle_copy">复制链接</string>
+    <string name="handle_browser">在浏览器中打开</string>
+    <string name="handle_close">收起工具</string>
+    <string name="common_clear">清空</string>
+    <string name="common_paste">粘贴</string>
+</resources>

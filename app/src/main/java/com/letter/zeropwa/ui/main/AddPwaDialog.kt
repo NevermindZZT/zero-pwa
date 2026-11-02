@@ -61,9 +61,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.AppPreferences
 import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.data.parser.PwaCandidate
@@ -132,18 +134,18 @@ fun AddPwaDialog(
             ) {
                 Column {
                     Text(
-                        text = "添加网站为 PWA",
+                        text = stringResource(R.string.dialog_add_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "自动提取网站元数据并独立窗口运行",
+                        text = stringResource(R.string.dialog_add_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "关闭")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_cancel))
                 }
             }
 
@@ -151,8 +153,8 @@ fun AddPwaDialog(
             OutlinedTextField(
                 value = urlInput,
                 onValueChange = { urlInput = it },
-                label = { Text("网站地址 (URL)") },
-                placeholder = { Text("https://example.com") },
+                label = { Text(stringResource(R.string.dialog_url_label)) },
+                placeholder = { Text(stringResource(R.string.dialog_url_placeholder)) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -163,7 +165,7 @@ fun AddPwaDialog(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (urlInput.isNotBlank()) {
                             IconButton(onClick = { urlInput = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "清空")
+                                Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.common_clear))
                             }
                         }
                         IconButton(onClick = {
@@ -172,7 +174,7 @@ fun AddPwaDialog(
                                 urlInput = text
                             }
                         }) {
-                            Icon(Icons.Default.ContentPaste, contentDescription = "粘贴")
+                            Icon(Icons.Default.ContentPaste, contentDescription = stringResource(R.string.common_paste))
                         }
                     }
                 }
@@ -194,11 +196,11 @@ fun AddPwaDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text("正在探测 Manifest 与提取图标...")
+                    Text(stringResource(R.string.dialog_inspecting))
                 } else {
                     Icon(Icons.Default.Search, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("分析网站配置", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.dialog_inspect_btn), fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -307,7 +309,7 @@ fun AddPwaDialog(
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = if (selectedThemeColor == candidate.themeColor) "提取主题色" else "自定义主题色",
+                                                text = if (selectedThemeColor == candidate.themeColor) stringResource(R.string.theme_color_extracted_tag) else stringResource(R.string.theme_color_custom_tag),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -323,7 +325,7 @@ fun AddPwaDialog(
                         OutlinedTextField(
                             value = editableName,
                             onValueChange = { editableName = it },
-                            label = { Text("应用名称") },
+                            label = { Text(stringResource(R.string.dialog_name_label)) },
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -339,7 +341,7 @@ fun AddPwaDialog(
                         // 显示模式选择（Chip 胶囊式）
                         Column {
                             Text(
-                                text = "窗口运行模式",
+                                text = stringResource(R.string.dialog_window_mode),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
@@ -352,7 +354,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedDisplayMode == PwaItem.DISPLAY_STANDALONE,
                                     onClick = { selectedDisplayMode = PwaItem.DISPLAY_STANDALONE },
-                                    label = { Text("独立应用") },
+                                    label = { Text(stringResource(R.string.home_chip_standalone)) },
                                     leadingIcon = if (selectedDisplayMode == PwaItem.DISPLAY_STANDALONE) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -360,7 +362,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedDisplayMode == PwaItem.DISPLAY_FULLSCREEN,
                                     onClick = { selectedDisplayMode = PwaItem.DISPLAY_FULLSCREEN },
-                                    label = { Text("沉浸全屏") },
+                                    label = { Text(stringResource(R.string.home_chip_fullscreen)) },
                                     leadingIcon = if (selectedDisplayMode == PwaItem.DISPLAY_FULLSCREEN) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -368,7 +370,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedDisplayMode == PwaItem.DISPLAY_MINIMAL_UI,
                                     onClick = { selectedDisplayMode = PwaItem.DISPLAY_MINIMAL_UI },
-                                    label = { Text("操作栏") },
+                                    label = { Text(stringResource(R.string.home_chip_minimal_ui)) },
                                     leadingIcon = if (selectedDisplayMode == PwaItem.DISPLAY_MINIMAL_UI) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -379,7 +381,7 @@ fun AddPwaDialog(
                         // 浏览器内核 (UA)
                         Column {
                             Text(
-                                text = "设备仿真 (User-Agent)",
+                                text = stringResource(R.string.dialog_ua_mode),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
@@ -392,7 +394,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedUaMode == PwaItem.UA_DEFAULT,
                                     onClick = { selectedUaMode = PwaItem.UA_DEFAULT },
-                                    label = { Text("移动版 (默认)") },
+                                    label = { Text(stringResource(R.string.dialog_ua_mobile)) },
                                     leadingIcon = if (selectedUaMode == PwaItem.UA_DEFAULT) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -400,7 +402,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedUaMode == PwaItem.UA_DESKTOP,
                                     onClick = { selectedUaMode = PwaItem.UA_DESKTOP },
-                                    label = { Text("电脑桌面版") },
+                                    label = { Text(stringResource(R.string.dialog_ua_desktop)) },
                                     leadingIcon = if (selectedUaMode == PwaItem.UA_DESKTOP) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -411,7 +413,7 @@ fun AddPwaDialog(
                         // 状态栏图标与文字风格
                         Column {
                             Text(
-                                text = "状态栏文字与图标风格",
+                                text = stringResource(R.string.dialog_status_bar_style),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
@@ -424,7 +426,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedIconMode == PwaItem.STATUS_BAR_ICON_AUTO,
                                     onClick = { selectedIconMode = PwaItem.STATUS_BAR_ICON_AUTO },
-                                    label = { Text("智能适配") },
+                                    label = { Text(stringResource(R.string.dialog_status_bar_auto)) },
                                     leadingIcon = if (selectedIconMode == PwaItem.STATUS_BAR_ICON_AUTO) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -432,7 +434,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedIconMode == PwaItem.STATUS_BAR_ICON_DARK,
                                     onClick = { selectedIconMode = PwaItem.STATUS_BAR_ICON_DARK },
-                                    label = { Text("深色字 (黑)") },
+                                    label = { Text(stringResource(R.string.dialog_status_bar_dark)) },
                                     leadingIcon = if (selectedIconMode == PwaItem.STATUS_BAR_ICON_DARK) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -440,7 +442,7 @@ fun AddPwaDialog(
                                 FilterChip(
                                     selected = selectedIconMode == PwaItem.STATUS_BAR_ICON_LIGHT,
                                     onClick = { selectedIconMode = PwaItem.STATUS_BAR_ICON_LIGHT },
-                                    label = { Text("浅色字 (白)") },
+                                    label = { Text(stringResource(R.string.dialog_status_bar_light)) },
                                     leadingIcon = if (selectedIconMode == PwaItem.STATUS_BAR_ICON_LIGHT) {
                                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                     } else null
@@ -464,8 +466,8 @@ fun AddPwaDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("贴边悬浮工具手柄", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                        Text("平时贴边半隐形不遮挡，轻触随时刷新网页与主页导航", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(stringResource(R.string.dialog_opt_floating_handle), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text(stringResource(R.string.dialog_opt_floating_handle_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Switch(checked = enableFloatingHandle, onCheckedChange = { enableFloatingHandle = it })
                                 }
@@ -478,8 +480,8 @@ fun AddPwaDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("品牌启动过渡屏", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                        Text("首帧加载前展示专属主题色与图标过渡，消除白屏等待感", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(stringResource(R.string.dialog_opt_splash), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text(stringResource(R.string.dialog_opt_splash_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Switch(checked = enableSplashScreen, onCheckedChange = { enableSplashScreen = it })
                                 }
@@ -492,8 +494,8 @@ fun AddPwaDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("状态栏沉浸模式", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                        Text("开启后内容延伸穿透状态栏；关闭则保留安全区隔离", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(stringResource(R.string.dialog_opt_immersive), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text(stringResource(R.string.dialog_opt_immersive_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Switch(checked = enableImmersive, onCheckedChange = { enableImmersive = it })
                                 }
@@ -506,8 +508,8 @@ fun AddPwaDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("允许多任务窗口并发", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                        Text("默认关闭（单窗口：再次点击复用已打开窗口）", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(stringResource(R.string.dialog_opt_multi_window), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text(stringResource(R.string.dialog_opt_multi_window_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Switch(checked = allowMultipleWindows, onCheckedChange = { allowMultipleWindows = it })
                                 }
@@ -520,8 +522,8 @@ fun AddPwaDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("长按应用图标直接打开", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                        Text("加入桌面图标长按弹出的快捷菜单", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(stringResource(R.string.dialog_opt_long_press), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text(stringResource(R.string.dialog_opt_long_press_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Switch(checked = pinToShortcuts, onCheckedChange = { pinToShortcuts = it })
                                 }
@@ -534,8 +536,8 @@ fun AddPwaDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("外部链接调用系统浏览器", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                        Text("离开本站范围的链接由系统默认浏览器接管", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(stringResource(R.string.dialog_opt_open_external), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text(stringResource(R.string.dialog_opt_open_external_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Switch(checked = openExternal, onCheckedChange = { openExternal = it })
                                 }
@@ -572,7 +574,7 @@ fun AddPwaDialog(
                     )
                 ) {
                     Text(
-                        text = "确认添加为此 PWA",
+                        text = stringResource(R.string.dialog_confirm_add),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

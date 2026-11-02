@@ -2,21 +2,23 @@ package com.letter.zeropwa.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.StringRes
+import com.letter.zeropwa.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class AppThemeMode(val label: String) {
-    FOLLOW_SYSTEM("跟随系统"),
-    LIGHT("浅色模式"),
-    DARK("深色模式")
+enum class AppThemeMode(val label: String, @StringRes val labelRes: Int) {
+    FOLLOW_SYSTEM("跟随系统", R.string.pref_theme_system),
+    LIGHT("浅色模式", R.string.pref_theme_light),
+    DARK("深色模式", R.string.pref_theme_dark)
 }
 
-enum class PwaSortOrder(val label: String, val sqlOrderBy: String) {
-    MANUAL("自定义排序", "sort_order ASC, created_at DESC"),
-    LAST_OPENED("最近使用优先", "last_opened_at DESC, created_at DESC"),
-    NAME("应用名称 (A-Z)", "name COLLATE NOCASE ASC"),
-    CREATED_AT("创建时间优先", "created_at DESC")
+enum class PwaSortOrder(val label: String, val sqlOrderBy: String, @StringRes val labelRes: Int) {
+    MANUAL("自定义排序", "sort_order ASC, created_at DESC", R.string.sort_manual),
+    LAST_OPENED("最近使用优先", "last_opened_at DESC, created_at DESC", R.string.sort_last_opened),
+    NAME("应用名称 (A-Z)", "name COLLATE NOCASE ASC", R.string.sort_name),
+    CREATED_AT("创建时间优先", "created_at DESC", R.string.sort_created_at)
 }
 
 class AppPreferences(context: Context) {

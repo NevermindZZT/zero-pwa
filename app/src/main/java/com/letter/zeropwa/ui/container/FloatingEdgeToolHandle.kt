@@ -51,11 +51,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.letter.zeropwa.R
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -141,10 +143,11 @@ fun FloatingEdgeToolHandle(
             if (!expanded) {
                 // Visible 14dp handle within a 48dp touch target. It intentionally
                 // covers a small area: a completely invisible handle cannot be found.
+                val tip = stringResource(R.string.handle_tip)
                 Box(
                     modifier = Modifier
                         .size(width = 48.dp, height = 56.dp)
-                        .semantics { contentDescription = "打开网页工具，拖动调整位置" }
+                        .semantics { contentDescription = tip }
                         .clickable { expanded = true; reveal() },
                     contentAlignment = Alignment.CenterEnd
                 ) {
@@ -175,18 +178,19 @@ fun FloatingEdgeToolHandle(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        QuickActionButton(Icons.Default.Refresh, "刷新网页") { closeMenu(); onReload() }
-                        QuickActionButton(Icons.Default.Home, "返回主页") { closeMenu(); onGoHome() }
-                        QuickActionButton(Icons.Default.ContentCopy, "复制链接") {
+                        QuickActionButton(Icons.Default.Refresh, stringResource(R.string.handle_refresh)) { closeMenu(); onReload() }
+                        QuickActionButton(Icons.Default.Home, stringResource(R.string.handle_home)) { closeMenu(); onGoHome() }
+                        val linkCopiedMsg = stringResource(R.string.container_link_copied)
+                        QuickActionButton(Icons.Default.ContentCopy, stringResource(R.string.handle_copy)) {
                             closeMenu()
                             val url = currentUrl()
                             if (url.isNotBlank()) {
                                 clipboard.setText(AnnotatedString(url))
-                                Toast.makeText(context, "链接已复制", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, linkCopiedMsg, Toast.LENGTH_SHORT).show()
                             }
                         }
-                        QuickActionButton(Icons.Default.OpenInBrowser, "在浏览器中打开") { closeMenu(); onOpenInBrowser() }
-                        QuickActionButton(Icons.Default.Close, "收起工具") { closeMenu() }
+                        QuickActionButton(Icons.Default.OpenInBrowser, stringResource(R.string.handle_browser)) { closeMenu(); onOpenInBrowser() }
+                        QuickActionButton(Icons.Default.Close, stringResource(R.string.handle_close)) { closeMenu() }
                     }
                 }
             }

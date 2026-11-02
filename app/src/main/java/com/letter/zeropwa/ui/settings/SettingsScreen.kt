@@ -72,12 +72,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.letter.zeropwa.BuildConfig
+import com.letter.zeropwa.R
+import com.letter.zeropwa.data.AppLanguage
+import com.letter.zeropwa.data.AppLanguageOption
 import com.letter.zeropwa.data.AppPreferences
 import com.letter.zeropwa.data.AppThemeMode
 import com.letter.zeropwa.data.AppThemeState
@@ -91,6 +96,8 @@ fun SettingsScreen(
     onBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    var selectedLanguage by remember(configuration) { mutableStateOf(AppLanguage.currentOption(context)) }
     val prefs = remember { AppPreferences(context) }
 
     val themeMode by AppThemeState.themeMode.collectAsState()
@@ -133,7 +140,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "设置",
+                        text = stringResource(R.string.settings_title),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 },
@@ -141,7 +148,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(R.string.action_cancel)
                         )
                     }
                 },
@@ -173,19 +180,55 @@ fun SettingsScreen(
                 onCopyRepo = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("Zero PWA Repo", GITHUB_REPO_URL))
-                    Toast.makeText(context, "仓库链接已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.settings_repo_copied), Toast.LENGTH_SHORT).show()
                 }
             )
 
-            // 2. 外观与主题设置组
-            SettingsSectionHeader(title = "外观与主题", icon = Icons.Default.Palette)
+            // 2. 应用语言设置
+            SettingsSectionHeader(title = stringResource(R.string.language_title), icon = Icons.Default.Language)
+            SettingsCard {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.language_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AppLanguageOption.entries.forEach { option ->
+                            FilterChip(
+                                selected = selectedLanguage == option,
+                                onClick = {
+                                    selectedLanguage = option
+                                    AppLanguage.set(context, option)
+                                },
+                                label = { Text(stringResource(option.labelRes), style = MaterialTheme.typography.labelMedium) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 3. 外观与主题设置组
+            SettingsSectionHeader(title = stringResource(R.string.settings_appearance), icon = Icons.Default.Palette)
             SettingsCard {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "深浅色主题模式",
+                        text = stringResource(R.string.settings_theme_mode),
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                     )
 
@@ -195,10 +238,15 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         AppThemeMode.entries.forEach { mode ->
+                            val label = when (mode) {
+                                AppThemeMode.FOLLOW_SYSTEM -> stringResource(R.string.pref_theme_system)
+                                AppThemeMode.LIGHT -> stringResource(R.string.pref_theme_light)
+                                AppThemeMode.DARK -> stringResource(R.string.pref_theme_dark)
+                            }
                             FilterChip(
                                 selected = themeMode == mode,
                                 onClick = { AppThemeState.setThemeMode(context, mode) },
-                                label = { Text(mode.label, style = MaterialTheme.typography.labelMedium) },
+                                label = { Text(label, style = MaterialTheme.typography.labelMedium) },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = FilterChipDefaults.filterChipColors(
@@ -213,11 +261,11 @@ fun SettingsScreen(
 
                     // Monet 动态壁纸取色开关 (Android 12+)
                     SettingsSwitchRow(
-                        title = "动态壁纸取色 (Material You)",
+                        title = stringResource(R.string.settings_dynamic_color),
                         subtitle = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            "根据系统壁纸调色板实时生成界面配色"
+                            stringResource(R.string.settings_dynamic_color_desc)
                         } else {
-                            "需要 Android 12 及以上系统版本支持"
+                            stringResource(R.string.settings_dynamic_color_req)
                         },
                         icon = Icons.Default.ColorLens,
                         checked = dynamicColor,
@@ -227,16 +275,16 @@ fun SettingsScreen(
                 }
             }
 
-            // 3. PWA 全局默认偏好设置组
-            SettingsSectionHeader(title = "PWA 全局偏好", icon = Icons.Default.Tune)
+            // 4. PWA 全局默认偏好设置组
+            SettingsSectionHeader(title = stringResource(R.string.settings_pwa_defaults), icon = Icons.Default.Tune)
             SettingsCard {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     SettingsSwitchRow(
-                        title = "新建时默认开启状态栏沉浸",
-                        subtitle = "网页内容默认延伸穿透状态栏，带来更强的无界沉浸感",
+                        title = stringResource(R.string.settings_def_immersive),
+                        subtitle = stringResource(R.string.settings_def_immersive_desc),
                         icon = Icons.Default.Layers,
                         checked = defaultImmersive,
                         onCheckedChange = {
@@ -248,8 +296,8 @@ fun SettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
                     SettingsSwitchRow(
-                        title = "新建时默认开启悬浮工具手柄",
-                        subtitle = "贴边半隐形微手柄，提供随时刷新网页与快捷导航功能",
+                        title = stringResource(R.string.settings_def_floating),
+                        subtitle = stringResource(R.string.settings_def_floating_desc),
                         icon = Icons.Default.Tune,
                         checked = defaultFloatingHandle,
                         onCheckedChange = {
@@ -261,8 +309,8 @@ fun SettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
                     SettingsSwitchRow(
-                        title = "新建时默认开启品牌启动过渡屏",
-                        subtitle = "首帧加载前展示专属主题色与图标过渡，消除白屏等待感",
+                        title = stringResource(R.string.settings_def_splash),
+                        subtitle = stringResource(R.string.settings_def_splash_desc),
                         icon = Icons.Default.HourglassEmpty,
                         checked = defaultSplash,
                         onCheckedChange = {
@@ -274,8 +322,8 @@ fun SettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
                     SettingsSwitchRow(
-                        title = "多窗口并发模式",
-                        subtitle = "默认关闭（再次点击已打开的 PWA 会激活复用已有窗口）",
+                        title = stringResource(R.string.settings_def_multi_window),
+                        subtitle = stringResource(R.string.settings_def_multi_window_desc),
                         icon = Icons.Default.OpenInBrowser,
                         checked = defaultAllowMulti,
                         onCheckedChange = {
@@ -287,11 +335,11 @@ fun SettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
                     Text(
-                        text = "首页列表默认排序规则",
+                        text = stringResource(R.string.settings_def_sort_order),
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "默认使用自定义排序，打开应用不会打乱列表位置",
+                        text = stringResource(R.string.settings_def_sort_order_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -301,10 +349,16 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         PwaSortOrder.entries.take(2).forEach { order ->
+                            val label = when (order) {
+                                PwaSortOrder.MANUAL -> stringResource(R.string.sort_manual)
+                                PwaSortOrder.LAST_OPENED -> stringResource(R.string.sort_last_opened)
+                                PwaSortOrder.NAME -> stringResource(R.string.sort_name)
+                                PwaSortOrder.CREATED_AT -> stringResource(R.string.sort_created_at)
+                            }
                             FilterChip(
                                 selected = pwaSortOrder == order,
                                 onClick = { AppThemeState.setSortOrder(context, order) },
-                                label = { Text(order.label, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -315,10 +369,16 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         PwaSortOrder.entries.drop(2).forEach { order ->
+                            val label = when (order) {
+                                PwaSortOrder.MANUAL -> stringResource(R.string.sort_manual)
+                                PwaSortOrder.LAST_OPENED -> stringResource(R.string.sort_last_opened)
+                                PwaSortOrder.NAME -> stringResource(R.string.sort_name)
+                                PwaSortOrder.CREATED_AT -> stringResource(R.string.sort_created_at)
+                            }
                             FilterChip(
                                 selected = pwaSortOrder == order,
                                 onClick = { AppThemeState.setSortOrder(context, order) },
-                                label = { Text(order.label, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -327,8 +387,8 @@ fun SettingsScreen(
                 }
             }
 
-            // 4. 后台运行与网络保活设置组
-            SettingsSectionHeader(title = "后台运行与网络保活", icon = Icons.Default.BatteryChargingFull)
+            // 5. 后台运行与网络保活设置组
+            SettingsSectionHeader(title = stringResource(R.string.settings_bg_keepalive), icon = Icons.Default.BatteryChargingFull)
             SettingsCard {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -351,7 +411,7 @@ fun SettingsScreen(
                                             try { context.startActivity(fallbackIntent) } catch (_: Exception) {}
                                         }
                                     } else {
-                                        Toast.makeText(context, "已开启后台运行不受限", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.settings_battery_active_toast), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             },
@@ -375,7 +435,7 @@ fun SettingsScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "允许后台网络与长连接 (忽略电池优化)",
+                                    text = stringResource(R.string.settings_ignore_battery),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -386,7 +446,7 @@ fun SettingsScreen(
                                         shape = RoundedCornerShape(4.dp)
                                     ) {
                                         Text(
-                                            text = "不受限",
+                                            text = stringResource(R.string.settings_ignore_battery_active),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
@@ -396,9 +456,9 @@ fun SettingsScreen(
                             }
                             Text(
                                 text = if (isIgnoringBattery) {
-                                    "已解除系统 Doze 深度打盹，后台网络与 Socket 维持畅通"
+                                    stringResource(R.string.settings_ignore_battery_active_desc)
                                 } else {
-                                    "点击申请系统白名单，防止切到后台时长连接被系统切断"
+                                    stringResource(R.string.settings_ignore_battery_inactive_desc)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -447,12 +507,12 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "切回前台长连接自愈脉冲",
+                                text = stringResource(R.string.settings_pulse_title),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = "切回前台时主动派发重连脉冲，加速断开的 WebSocket 瞬间恢复",
+                                text = stringResource(R.string.settings_pulse_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -463,7 +523,7 @@ fun SettingsScreen(
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
-                                text = "容器内置",
+                                text = stringResource(R.string.settings_built_in),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -473,20 +533,20 @@ fun SettingsScreen(
                 }
             }
 
-            // 5. 关于与开发者信息
-            SettingsSectionHeader(title = "关于项目", icon = Icons.Default.Info)
+            // 6. 关于与开发者信息
+            SettingsSectionHeader(title = stringResource(R.string.settings_about), icon = Icons.Default.Info)
             SettingsCard {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    AboutInfoRow(title = "开发者", value = "Letter (NevermindZZT)")
+                    AboutInfoRow(title = stringResource(R.string.settings_developer), value = "Letter (NevermindZZT)")
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    AboutInfoRow(title = "技术架构", value = "Jetpack Compose · Material 3 · Kotlin 2.0")
+                    AboutInfoRow(title = stringResource(R.string.settings_arch), value = "Jetpack Compose · Material 3 · Kotlin 2.0")
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    AboutInfoRow(title = "构建环境", value = "AGP 8.4.1 · Java 17 · Android SDK 37")
+                    AboutInfoRow(title = stringResource(R.string.settings_build_env), value = "AGP 8.4.1 · Java 17 · Android SDK 37")
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    AboutInfoRow(title = "开源协议", value = "MIT License")
+                    AboutInfoRow(title = stringResource(R.string.settings_license), value = "MIT License")
                 }
             }
 
@@ -538,7 +598,7 @@ private fun ProjectHeroCard(
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Zero PWA",
+                            text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -559,7 +619,7 @@ private fun ProjectHeroCard(
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "任意网站 · 独立窗口 · 原生体验",
+                        text = stringResource(R.string.app_tagline),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -590,7 +650,7 @@ private fun ProjectHeroCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "开源项目主页",
+                            text = stringResource(R.string.settings_repo_title),
                             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
@@ -606,7 +666,7 @@ private fun ProjectHeroCard(
                     IconButton(onClick = onCopyRepo, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "复制链接",
+                            contentDescription = stringResource(R.string.handle_copy),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
@@ -614,7 +674,7 @@ private fun ProjectHeroCard(
                     IconButton(onClick = onOpenRepo, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                            contentDescription = "打开链接",
+                            contentDescription = stringResource(R.string.handle_browser),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )

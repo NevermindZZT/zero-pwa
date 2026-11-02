@@ -37,10 +37,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
+import com.letter.zeropwa.R
 import com.letter.zeropwa.data.model.PwaItem
 
 @Composable
@@ -159,7 +161,7 @@ fun PwaSplashScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "网站响应较慢，可能存在弱网或连接延迟",
+                            text = stringResource(R.string.splash_timeout_tip),
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor
                         )
@@ -171,13 +173,13 @@ fun PwaSplashScreen(
                                 onClick = onRetry,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("刷新重试")
+                                Text(stringResource(R.string.splash_retry))
                             }
                             FilledTonalButton(
                                 onClick = onDismiss,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("跳过等待")
+                                Text(stringResource(R.string.splash_skip))
                             }
                         }
                     }
