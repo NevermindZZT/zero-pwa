@@ -29,6 +29,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -91,6 +92,7 @@ import com.letter.zeropwa.data.model.PwaItem
 import com.letter.zeropwa.data.parser.PwaManifestParser
 import com.letter.zeropwa.shortcut.PwaShortcutManager
 import com.letter.zeropwa.ui.theme.ZeroPwaTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class PwaContainerActivity : ComponentActivity() {
@@ -482,6 +484,24 @@ fun PwaContainerScreen(
         return
     }
 
+    var isSplashDismissed by remember(currentPwa.id) { mutableStateOf(!currentPwa.enableSplashScreen) }
+    var isSplashTimeout by remember(currentPwa.id) { mutableStateOf(false) }
+
+    fun dismissSplash() {
+        if (!isSplashDismissed) {
+            isSplashDismissed = true
+        }
+    }
+
+    LaunchedEffect(currentPwa.id) {
+        if (currentPwa.enableSplashScreen && !isSplashDismissed) {
+            delay(10000L)
+            if (!isSplashDismissed) {
+                isSplashTimeout = true
+            }
+        }
+    }
+
     // 计算状态栏颜色：用户手动配置的主题色具备最高优先级，其次使用网页动态提取色，最后回退系统色
     val effectiveColorInt = currentPwa.themeColor ?: dynamicThemeColor ?: MaterialTheme.colorScheme.surface.toArgb()
     val statusBarComposeColor = Color(effectiveColorInt)
@@ -675,6 +695,9 @@ fun PwaContainerScreen(
                                 onProgressChangedListener = { p ->
                                     progress = p / 100f
                                     isLoading = p < 100
+                                    if (p >= 70) {
+                                        dismissSplash()
+                                    }
                                 },
                                 onTitleReceivedListener = { title ->
                                     currentTitle = title
@@ -686,6 +709,9 @@ fun PwaContainerScreen(
                             webViewClient = PwaWebViewClient(
                                 context = ctx,
                                 pwa = currentPwa,
+                                onPageCommitVisibleListener = {
+                                    dismissSplash()
+                                },
                                 onPageStartedListener = { url ->
                                     currentUrl = url
                                     isLoading = true
@@ -891,10 +917,12 @@ fun PwaContainerScreen(
                                         })()
                                     """.trimIndent()
                                     evaluateJavascript(focusAdjustJs, null)
+                                    dismissSplash()
                                 },
                                 onErrorReceivedListener = { err ->
                                     errorMessage = err
                                     isLoading = false
+                                    dismissSplash()
                                 }
                             )
 
@@ -936,6 +964,26 @@ fun PwaContainerScreen(
                             }
                         }
                     }
+                }
+
+                // 品牌启动过渡屏 (彻底消灭白屏，首帧绘制完成平滑淡出，超时支持一键重试)
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isSplashDismissed,
+                    enter = fadeIn(),
+                    exit = fadeOut(animationSpec = tween(380))
+                ) {
+                    PwaSplashScreen(
+                        pwa = currentPwa,
+                        iconBitmap = iconBitmap,
+                        isTimeout = isSplashTimeout,
+                        onRetry = {
+                            isSplashTimeout = false
+                            webViewRef?.reload()
+                        },
+                        onDismiss = {
+                            dismissSplash()
+                        }
+                    )
                 }
 
                 // 贴边灵动悬浮手柄 (支持单独按 PWA 配置开启/关闭，无操作自动半隐形，解决随时刷新与快捷操作需求)

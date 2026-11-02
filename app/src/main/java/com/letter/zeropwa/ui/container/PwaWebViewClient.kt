@@ -16,6 +16,7 @@ class PwaWebViewClient(
     private val pwa: PwaItem,
     private val onPageStartedListener: (String) -> Unit,
     private val onPageFinishedListener: (String) -> Unit,
+    private val onPageCommitVisibleListener: () -> Unit = {},
     private val onErrorReceivedListener: (String) -> Unit
 ) : WebViewClient() {
 
@@ -24,6 +25,11 @@ class PwaWebViewClient(
         if (url != null) {
             onPageStartedListener(url)
         }
+    }
+
+    override fun onPageCommitVisible(view: WebView?, url: String?) {
+        super.onPageCommitVisible(view, url)
+        onPageCommitVisibleListener()
     }
 
     override fun onPageFinished(view: WebView?, url: String?) {

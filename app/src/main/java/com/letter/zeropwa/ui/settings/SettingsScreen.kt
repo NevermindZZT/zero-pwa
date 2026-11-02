@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Layers
@@ -99,6 +100,7 @@ fun SettingsScreen(
     var defaultImmersive by remember { mutableStateOf(prefs.defaultImmersiveStatusBar) }
     var defaultAllowMulti by remember { mutableStateOf(prefs.defaultAllowMultipleWindows) }
     var defaultFloatingHandle by remember { mutableStateOf(prefs.defaultFloatingToolHandle) }
+    var defaultSplash by remember { mutableStateOf(prefs.defaultSplashScreen) }
 
     val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? PowerManager }
     var isIgnoringBattery by remember {
@@ -253,6 +255,19 @@ fun SettingsScreen(
                         onCheckedChange = {
                             defaultFloatingHandle = it
                             prefs.defaultFloatingToolHandle = it
+                        }
+                    )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+                    SettingsSwitchRow(
+                        title = "新建时默认开启品牌启动过渡屏",
+                        subtitle = "首帧加载前展示专属主题色与图标过渡，消除白屏等待感",
+                        icon = Icons.Default.HourglassEmpty,
+                        checked = defaultSplash,
+                        onCheckedChange = {
+                            defaultSplash = it
+                            prefs.defaultSplashScreen = it
                         }
                     )
 

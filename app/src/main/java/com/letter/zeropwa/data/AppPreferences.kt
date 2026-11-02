@@ -50,6 +50,10 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_DEFAULT_FLOATING_HANDLE, true)
         set(value) = prefs.edit().putBoolean(KEY_DEFAULT_FLOATING_HANDLE, value).apply()
 
+    var defaultSplashScreen: Boolean
+        get() = prefs.getBoolean(KEY_DEFAULT_SPLASH_SCREEN, true)
+        set(value) = prefs.edit().putBoolean(KEY_DEFAULT_SPLASH_SCREEN, value).apply()
+
     var pwaSortOrder: PwaSortOrder
         get() {
             val name = prefs.getString(KEY_PWA_SORT_ORDER, PwaSortOrder.MANUAL.name)
@@ -67,6 +71,7 @@ class AppPreferences(context: Context) {
         private const val KEY_DEFAULT_IMMERSIVE = "key_default_immersive"
         private const val KEY_DEFAULT_ALLOW_MULTI = "key_default_allow_multi"
         private const val KEY_DEFAULT_FLOATING_HANDLE = "key_default_floating_handle"
+        private const val KEY_DEFAULT_SPLASH_SCREEN = "key_default_splash_screen"
         private const val KEY_PWA_SORT_ORDER = "key_pwa_sort_order"
     }
 }

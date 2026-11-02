@@ -59,6 +59,7 @@ fun EditPwaDialog(
     var userAgentMode by remember { mutableIntStateOf(pwa.userAgentMode) }
     var iconMode by remember { mutableIntStateOf(pwa.statusBarIconMode) }
     var enableFloatingHandle by remember { mutableStateOf(pwa.enableFloatingToolHandle) }
+    var enableSplash by remember { mutableStateOf(pwa.enableSplashScreen) }
     var enableImmersive by remember { mutableStateOf(pwa.enableImmersiveStatusBar) }
     var allowMultipleWindows by remember { mutableStateOf(pwa.allowMultipleWindows) }
     var openExternal by remember { mutableStateOf(pwa.openExternalLinksInBrowser) }
@@ -273,6 +274,20 @@ fun EditPwaDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
+                            Text("品牌启动过渡屏", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text("首帧加载前展示专属主题色与图标过渡，消除白屏等待感", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = enableSplash, onCheckedChange = { enableSplash = it })
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text("状态栏沉浸模式", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                             Text("开启后内容延伸穿透状态栏；关闭则保留安全区隔离", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -335,6 +350,7 @@ fun EditPwaDialog(
                             userAgentMode = userAgentMode,
                             statusBarIconMode = iconMode,
                             enableFloatingToolHandle = enableFloatingHandle,
+                            enableSplashScreen = enableSplash,
                             enableImmersiveStatusBar = enableImmersive,
                             allowMultipleWindows = allowMultipleWindows,
                             openExternalLinksInBrowser = openExternal,
