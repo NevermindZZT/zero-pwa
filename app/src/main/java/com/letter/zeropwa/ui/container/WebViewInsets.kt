@@ -5,9 +5,9 @@ import android.webkit.WebView
 import androidx.core.view.ViewCompat
 
 /** Space already occupied outside the WebView, in window pixels (not dp/CSS pixels). */
-internal data class ViewportOffsets(val left: Int, val top: Int, val right: Int, val bottom: Int)
+data class ViewportOffsets(val left: Int, val top: Int, val right: Int, val bottom: Int)
 
-internal fun viewportOffsets(
+fun viewportOffsets(
     windowWidth: Int,
     windowHeight: Int,
     left: Int,

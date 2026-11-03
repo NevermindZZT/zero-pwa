@@ -45,7 +45,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val result = PwaManifestParser.inspectUrl(url)
             result.fold(
                 onSuccess = { candidate ->
-                    _inspectState.value = InspectState.Success(candidate)
+                    // 仅接受能实际解码的图标；无效链接、HTML 错误页等依次回退。
+                    val candidates = candidate.iconCandidates.ifEmpty { listOfNotNull(candidate.iconUrl) }
+                    val validIcon = candidates.take(8).firstOrNull { url ->
+                        PwaManifestParser.downloadBitmap(getApplication(), url) != null
+                    }
+                    _inspectState.value = InspectState.Success(candidate.copy(iconUrl = validIcon))
                 },
                 onFailure = { error ->
                     _inspectState.value = InspectState.Error(error.localizedMessage ?: "解析失败，请检查网址与网络")
@@ -93,12 +98,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             val insertedId = repository.insert(itemToInsert)
             if (insertedId > 0 && !candidate.iconUrl.isNullOrBlank()) {
-                // 后台下载并持久化保存图标文件 (支持 SVG/PNG/WebP/ICO 等)
-                val bitmap = PwaManifestParser.downloadBitmap(getApplication(), candidate.iconUrl)
-                if (bitmap != null) {
+                // 已选候选失效时继续尝试其余地址。
+                val urls = (listOf(candidate.iconUrl) + candidate.iconCandidates).distinct().take(8)
+                for (url in urls) {
+                    val bitmap = PwaManifestParser.downloadBitmap(getApplication(), url) ?: continue
                     val localPath = repository.saveIconBitmap(bitmap, insertedId)
-                    val updatedItem = itemToInsert.copy(id = insertedId, iconPath = localPath)
+                    val updatedItem = itemToInsert.copy(id = insertedId, iconPath = localPath, iconUrl = url)
                     repository.update(updatedItem)
+                    break
                 }
             }
             resetInspectState()

@@ -62,7 +62,7 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 // Clamp on every layout change, including keyboard, landscape and split screen.
-internal fun handleVerticalOffset(heightPx: Float, controlHeightPx: Float, fraction: Float): Float {
+fun handleVerticalOffset(heightPx: Float, controlHeightPx: Float, fraction: Float): Float {
     val travel = (heightPx - controlHeightPx).coerceAtLeast(0f)
     return travel * fraction.coerceIn(0f, 1f)
 }

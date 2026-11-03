@@ -11,6 +11,7 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
@@ -26,6 +27,7 @@ data class PwaCandidate(
     val startUrl: String,
     val scope: String? = null,
     val iconUrl: String? = null,
+    val iconCandidates: List<String> = emptyList(),
     val themeColor: Int? = null,
     val backgroundColor: Int? = null,
     val displayMode: String = "standalone",
@@ -43,7 +45,9 @@ object PwaManifestParser {
 
     private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
 
-    suspend fun inspectUrl(inputUrl: String): Result<PwaCandidate> = withContext(Dispatchers.IO) {
+    suspend fun inspectUrl(inputUrl: String): Result<PwaCandidate> = inspectUrl(inputUrl, httpClient)
+
+    internal suspend fun inspectUrl(inputUrl: String, client: OkHttpClient): Result<PwaCandidate> = withContext(Dispatchers.IO) {
         try {
             val normalizedUrl = normalizeUrl(inputUrl)
             val request = Request.Builder()
@@ -52,13 +56,12 @@ object PwaManifestParser {
                 .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                 .build()
 
-            val response = httpClient.newCall(request).execute()
-            if (!response.isSuccessful) {
-                return@withContext Result.failure(Exception("HTTP 响应错误: ${response.code}"))
+            val (finalUrl, html) = client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(Exception("HTTP 响应错误: ${response.code}"))
+                }
+                response.request.url.toString() to response.body?.string().orEmpty()
             }
-
-            val finalUrl = response.request.url.toString()
-            val html = response.body?.string().orEmpty()
             val doc = Jsoup.parse(html, finalUrl)
 
             var name = doc.title().trim()
@@ -71,7 +74,13 @@ object PwaManifestParser {
             var backgroundColor = parseColorSafely(doc.select("meta[name=background-color]").attr("content"))
 
             var manifestUrl: String? = null
-            val manifestElement = doc.select("link[rel=manifest], link[rel='alternate'][type='application/json']").first()
+            val links = doc.select("link[href]")
+            fun hasRel(rel: String, token: String): Boolean =
+                rel.split(Regex("\\s+")).any { it.equals(token, ignoreCase = true) }
+            val manifestElement = links.firstOrNull {
+                hasRel(it.attr("rel"), "manifest") ||
+                    (hasRel(it.attr("rel"), "alternate") && it.attr("type").equals("application/json", ignoreCase = true))
+            }
             if (manifestElement != null) {
                 val href = manifestElement.attr("abs:href")
                 if (href.isNotBlank()) {
@@ -81,12 +90,12 @@ object PwaManifestParser {
 
             val fallbackIcons = mutableListOf<Pair<String, Int>>() // url, score
             // Apple touch icons (一般是高质量 180x180 png)
-            doc.select("link[rel=apple-touch-icon], link[rel=apple-touch-icon-precomposed]").forEach { elem ->
+            links.filter { hasRel(it.attr("rel"), "apple-touch-icon") || hasRel(it.attr("rel"), "apple-touch-icon-precomposed") }.forEach { elem ->
                 val href = elem.attr("abs:href")
                 if (href.isNotBlank()) fallbackIcons.add(href to 200)
             }
             // Favicons (包含 svg 或 png)
-            doc.select("link[rel='shortcut icon'], link[rel='icon'], link[rel='mask-icon']").forEach { elem ->
+            links.filter { hasRel(it.attr("rel"), "icon") || hasRel(it.attr("rel"), "mask-icon") }.forEach { elem ->
                 val href = elem.attr("abs:href")
                 val type = elem.attr("type")
                 if (href.isNotBlank()) {
@@ -97,7 +106,7 @@ object PwaManifestParser {
             // og:image
             val ogImage = doc.select("meta[property='og:image'], meta[name='twitter:image']").attr("content")
             if (ogImage.isNotBlank()) {
-                fallbackIcons.add(resolveUrl(finalUrl, ogImage) to 80)
+                fallbackIcons.add(resolveUrl(doc.baseUri(), ogImage) to 80)
             }
 
             var shortName: String? = null
@@ -114,40 +123,38 @@ object PwaManifestParser {
                         .header("User-Agent", DEFAULT_UA)
                         .header("Accept", "application/json,application/manifest+json,*/*")
                         .build()
-                    val manifestRes = httpClient.newCall(manifestReq).execute()
-                    if (manifestRes.isSuccessful) {
-                        val manifestJsonStr = manifestRes.body?.string().orEmpty()
-                        if (manifestJsonStr.isNotBlank()) {
-                            val json = JSONObject(manifestJsonStr)
-                            val mName = json.optString("name").trim()
-                            val mShortName = json.optString("short_name").trim()
-                            if (mName.isNotBlank()) name = mName
-                            if (mShortName.isNotBlank()) shortName = mShortName
+                    client.newCall(manifestReq).execute().use { manifestRes ->
+                        if (manifestRes.isSuccessful) {
+                            val manifestJsonStr = manifestRes.body?.string().orEmpty()
+                            if (manifestJsonStr.isNotBlank()) {
+                                val json = JSONObject(manifestJsonStr)
+                                val mName = json.optString("name").trim()
+                                val mShortName = json.optString("short_name").trim()
+                                if (mName.isNotBlank()) name = mName
+                                if (mShortName.isNotBlank()) shortName = mShortName
 
-                            val mStartUrl = json.optString("start_url").trim()
-                            if (mStartUrl.isNotBlank()) {
-                                startUrl = resolveUrl(finalUrl, mStartUrl)
-                            }
-                            val mScope = json.optString("scope").trim()
-                            if (mScope.isNotBlank()) {
-                                scope = resolveUrl(finalUrl, mScope)
-                            }
+                                // 保留用户输入页面的最终地址，不让站点级 manifest 把深层链接改回首页。
+                                val mScope = json.optString("scope").trim()
+                                if (mScope.isNotBlank()) {
+                                    scope = resolveUrl(manifestRes.request.url.toString(), mScope)
+                                }
 
-                            val mThemeColor = parseColorSafely(json.optString("theme_color"))
-                            if (mThemeColor != null) themeColor = mThemeColor
+                                val mThemeColor = parseColorSafely(json.optString("theme_color"))
+                                if (mThemeColor != null) themeColor = mThemeColor
 
-                            val mBgColor = parseColorSafely(json.optString("background-color"))
-                            if (mBgColor != null) backgroundColor = mBgColor
+                                val mBgColor = parseColorSafely(json.optString("background-color"))
+                                if (mBgColor != null) backgroundColor = mBgColor
 
-                            val mDisplay = json.optString("display").trim()
-                            if (mDisplay.isNotBlank()) displayMode = mDisplay
+                                val mDisplay = json.optString("display").trim()
+                                if (mDisplay.isNotBlank()) displayMode = mDisplay
 
-                            val mOrientation = json.optString("orientation").trim()
-                            if (mOrientation.isNotBlank()) orientation = mOrientation
+                                val mOrientation = json.optString("orientation").trim()
+                                if (mOrientation.isNotBlank()) orientation = mOrientation
 
-                            val iconsArray = json.optJSONArray("icons")
-                            if (iconsArray != null) {
-                                manifestIcons.addAll(extractBestIcons(manifestUrl, iconsArray))
+                                val iconsArray = json.optJSONArray("icons")
+                                if (iconsArray != null) {
+                                    manifestIcons.addAll(extractBestIcons(manifestRes.request.url.toString(), iconsArray))
+                                }
                             }
                         }
                     }
@@ -159,22 +166,17 @@ object PwaManifestParser {
             try {
                 val hostUri = URI(finalUrl)
                 val baseRoot = "${hostUri.scheme}://${hostUri.authority}"
-                rootIcons.add("$baseRoot/favicon.svg" to 250)
-                rootIcons.add("$baseRoot/favicon.ico" to 50)
+                rootIcons.add("$baseRoot/favicon.ico" to 49)
             } catch (_: Exception) {}
 
-            // 综合排序筛选出最优图标
-            val allCandidates = mutableListOf<Pair<String, Int>>()
-            allCandidates.addAll(manifestIcons)
-            allCandidates.addAll(fallbackIcons)
-            allCandidates.addAll(rootIcons)
-
-            val sortedIcons = allCandidates
-                .filter { it.first.isNotBlank() }
-                .distinctBy { it.first }
-                .sortedByDescending { it.second }
-
-            val chosenIconUrl = sortedIcons.firstOrNull()?.first
+            // 页面声明的 icon 反映当前路径，优先于可能属于整个站点的 manifest。
+            val sortedIcons = (fallbackIcons.filter { it.second >= 100 }.sortedByDescending { it.second } +
+                manifestIcons.sortedByDescending { it.second } +
+                fallbackIcons.filter { it.second < 100 }.sortedByDescending { it.second } + rootIcons)
+                .map { it.first }
+                .filter { it.startsWith("http://", true) || it.startsWith("https://", true) }
+                .distinct()
+            val chosenIconUrl = sortedIcons.firstOrNull()
 
             if (name.isBlank()) {
                 name = try {
@@ -192,6 +194,7 @@ object PwaManifestParser {
                     startUrl = startUrl,
                     scope = scope,
                     iconUrl = chosenIconUrl,
+                    iconCandidates = sortedIcons,
                     themeColor = themeColor,
                     backgroundColor = backgroundColor,
                     displayMode = displayMode,
@@ -227,11 +230,12 @@ object PwaManifestParser {
                 .url(url)
                 .header("User-Agent", DEFAULT_UA)
                 .build()
-            val response = httpClient.newCall(request).execute()
-            if (response.isSuccessful) {
-                val bytes = response.body?.bytes()
-                if (bytes != null && bytes.isNotEmpty()) {
-                    return@withContext BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            httpClient.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val bytes = response.body?.bytes()
+                    if (bytes != null && bytes.isNotEmpty()) {
+                        return@withContext BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    }
                 }
             }
         } catch (_: Exception) {}
@@ -285,12 +289,7 @@ object PwaManifestParser {
     }
 
     fun resolveUrl(base: String, relative: String): String {
-        return try {
-            val baseUri = URI(base)
-            baseUri.resolve(relative).toString()
-        } catch (_: Exception) {
-            relative
-        }
+        return base.toHttpUrlOrNull()?.resolve(relative)?.toString() ?: relative
     }
 
     fun parseColorSafely(raw: String?): Int? {
