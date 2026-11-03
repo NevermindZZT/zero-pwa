@@ -293,15 +293,21 @@ fun PwaItemCard(
             // 图标渲染 (SVG 与位图通用，大圆角更现代)
             val iconFile = pwa.iconPath?.let { File(it) }
             if (iconFile != null && iconFile.exists()) {
-                AsyncImage(
-                    model = iconFile,
-                    contentDescription = pwa.displayName,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                Surface(
+                    modifier = Modifier.size(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.45f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                ) {
+                    Box(modifier = Modifier.fillMaxSize().padding(4.dp), contentAlignment = Alignment.Center) {
+                        AsyncImage(
+                            model = iconFile,
+                            contentDescription = pwa.displayName,
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
             } else {
                 Box(
                     modifier = Modifier

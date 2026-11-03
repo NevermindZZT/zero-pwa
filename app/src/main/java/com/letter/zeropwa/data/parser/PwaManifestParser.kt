@@ -219,8 +219,8 @@ object PwaManifestParser {
             val result = imageLoader.execute(request)
             val drawable = result.drawable
             if (drawable != null) {
-                return@withContext (drawable as? BitmapDrawable)?.bitmap
-                    ?: drawable.toBitmap(512, 512, Bitmap.Config.ARGB_8888)
+                val raw = (drawable as? BitmapDrawable)?.bitmap ?: drawable.toBitmap(512, 512, Bitmap.Config.ARGB_8888)
+                return@withContext padBitmapToSquare(raw, 512, 0.90f)
             }
         } catch (_: Exception) {}
 
@@ -234,12 +234,33 @@ object PwaManifestParser {
                 if (response.isSuccessful) {
                     val bytes = response.body?.bytes()
                     if (bytes != null && bytes.isNotEmpty()) {
-                        return@withContext BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        val raw = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        if (raw != null) {
+                            return@withContext padBitmapToSquare(raw, 512, 0.90f)
+                        }
                     }
                 }
             }
         } catch (_: Exception) {}
         null
+    }
+
+    /**
+     * 规范化位图为 512x512 画布并在中心保留 90% 安全视口，四周留出自然的防裁剪呼吸边距
+     */
+    fun padBitmapToSquare(src: Bitmap, targetSize: Int = 512, innerFraction: Float = 0.90f): Bitmap {
+        val output = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(output)
+        val maxInner = (targetSize * innerFraction).toInt().coerceAtLeast(1)
+        val scale = minOf(maxInner.toFloat() / src.width, maxInner.toFloat() / src.height)
+        val dstW = (src.width * scale).toInt().coerceAtLeast(1)
+        val dstH = (src.height * scale).toInt().coerceAtLeast(1)
+        val dstLeft = (targetSize - dstW) / 2
+        val dstTop = (targetSize - dstH) / 2
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+        val dstRect = android.graphics.Rect(dstLeft, dstTop, dstLeft + dstW, dstTop + dstH)
+        canvas.drawBitmap(src, null, dstRect, paint)
+        return output
     }
 
     private fun extractBestIcons(baseUrl: String, iconsArray: JSONArray): List<Pair<String, Int>> {

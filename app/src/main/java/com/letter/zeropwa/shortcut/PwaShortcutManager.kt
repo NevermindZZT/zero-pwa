@@ -5,9 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color as AndroidColor
+import android.graphics.Paint
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import kotlin.math.roundToInt
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -111,8 +116,48 @@ object PwaShortcutManager {
         } catch (_: Throwable) {}
     }
 
+    data class AdaptiveRect(val left: Int, val top: Int, val right: Int, val bottom: Int) {
+        val width: Int get() = right - left
+        val height: Int get() = bottom - top
+    }
+
     /**
-     * 规范化快捷方式图标：按系统允许的最大尺寸安全缩放，避免超大位图触发 Binder 传输异常
+     * 计算自适应安全区视口坐标，严格将原图等比限制在 68% 的黄金视口内，留出 16% 四边呼吸边距
+     */
+    fun calculateAdaptiveInsets(canvasSize: Int, srcWidth: Int, srcHeight: Int, safeRatio: Float = 0.68f): AdaptiveRect {
+        val safeAreaSize = (canvasSize * safeRatio).roundToInt().coerceAtLeast(1)
+        val scale = minOf(safeAreaSize.toFloat() / srcWidth, safeAreaSize.toFloat() / srcHeight)
+        val dstW = (srcWidth * scale).roundToInt().coerceAtLeast(1)
+        val dstH = (srcHeight * scale).roundToInt().coerceAtLeast(1)
+        val dstLeft = (canvasSize - dstW) / 2
+        val dstTop = (canvasSize - dstH) / 2
+        return AdaptiveRect(dstLeft, dstTop, dstLeft + dstW, dstTop + dstH)
+    }
+
+    /**
+     * 构建符合 Android 官方标准的自适应图标画布：
+     * 1. 彻底解决桌面图标被强行放大 1.5 倍的问题：严格将原图标置于 68% 中心安全区，留出呼吸边距；
+     * 2. 彻底解决透明图标在 Launcher 变成纯黑块的问题：铺设纯净防黑底板 (纯白)，通透锐利。
+     */
+    fun buildAdaptiveIconBitmap(originalBitmap: Bitmap, targetCanvasSize: Int): Bitmap {
+        val canvasSize = targetCanvasSize.coerceIn(108, 384)
+        val output = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+
+        // 铺设计算后的不透明安全底色 (纯白，杜绝任何 Alpha 穿透引发的 Launcher 黑色清屏)
+        canvas.drawColor(AndroidColor.WHITE)
+
+        val insets = calculateAdaptiveInsets(canvasSize, originalBitmap.width, originalBitmap.height)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        val srcRect = Rect(0, 0, originalBitmap.width, originalBitmap.height)
+        val dstRect = Rect(insets.left, insets.top, insets.right, insets.bottom)
+        canvas.drawBitmap(originalBitmap, srcRect, dstRect, paint)
+
+        return output
+    }
+
+    /**
+     * 规范化快捷方式图标：构建自适应底板并按系统允许尺寸安全返回
      */
     private fun createShortcutIcon(context: Context, originalBitmap: Bitmap?): IconCompat {
         if (originalBitmap == null) {
@@ -124,18 +169,13 @@ object PwaShortcutManager {
                 val sm = context.getSystemService(ShortcutManager::class.java)
                 val mw = sm?.iconMaxWidth ?: 192
                 val mh = sm?.iconMaxHeight ?: 192
-                minOf(mw, mh).coerceIn(96, 256)
+                minOf(mw, mh).coerceIn(108, 256)
             } else {
                 192
             }
 
-            val scaled = if (originalBitmap.width > maxDim || originalBitmap.height > maxDim) {
-                Bitmap.createScaledBitmap(originalBitmap, maxDim, maxDim, true)
-            } else {
-                originalBitmap
-            }
-
-            IconCompat.createWithAdaptiveBitmap(scaled)
+            val adaptiveBitmap = buildAdaptiveIconBitmap(originalBitmap, maxDim)
+            IconCompat.createWithAdaptiveBitmap(adaptiveBitmap)
         } catch (_: Throwable) {
             IconCompat.createWithResource(context, R.mipmap.ic_launcher)
         }

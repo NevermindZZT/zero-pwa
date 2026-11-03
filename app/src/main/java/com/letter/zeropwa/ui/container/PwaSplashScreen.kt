@@ -86,26 +86,25 @@ fun PwaSplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 1. 图标展示 (大圆角 18dp，带细腻呼吸微动效)
-            if (iconBitmap != null) {
-                Image(
-                    bitmap = iconBitmap.asImageBitmap(),
-                    contentDescription = pwa.displayName,
-                    modifier = Modifier
-                        .size(72.dp)
-                        .scale(if (!isTimeout) scaleAnim else 1f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .border(1.dp, contentColor.copy(alpha = 0.2f), RoundedCornerShape(18.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Surface(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .scale(if (!isTimeout) scaleAnim else 1f),
-                    shape = RoundedCornerShape(18.dp),
-                    color = contentColor.copy(alpha = 0.15f)
-                ) {
+            // 1. 图标展示 (大圆角 18dp，带细腻呼吸微动效与防裁切留白)
+            Surface(
+                modifier = Modifier
+                    .size(72.dp)
+                    .scale(if (!isTimeout) scaleAnim else 1f),
+                shape = RoundedCornerShape(18.dp),
+                color = contentColor.copy(alpha = 0.08f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, contentColor.copy(alpha = 0.2f))
+            ) {
+                if (iconBitmap != null) {
+                    Box(modifier = Modifier.fillMaxSize().padding(6.dp), contentAlignment = Alignment.Center) {
+                        Image(
+                            bitmap = iconBitmap.asImageBitmap(),
+                            contentDescription = pwa.displayName,
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                } else {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = pwa.displayName.take(1).uppercase(),
