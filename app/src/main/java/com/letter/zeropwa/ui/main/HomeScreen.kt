@@ -241,9 +241,15 @@ fun HomeScreen(
     editingPwa?.let { pwa ->
         EditPwaDialog(
             pwa = pwa,
-            onConfirm = { updated ->
-                viewModel.updatePwa(updated)
+            onConfirm = { updated, newIconUrl ->
+                viewModel.updatePwa(updated, newIconUrl)
                 editingPwa = null
+            },
+            onRefetchIcon = { url ->
+                viewModel.refetchIcon(url)
+            },
+            onValidateIcon = { url ->
+                viewModel.validateIconUrl(url)
             },
             onDismiss = { editingPwa = null }
         )

@@ -160,4 +160,18 @@
     <string name="handle_close">Close Tools</string>
     <string name="common_clear">Clear</string>
     <string name="common_paste">Paste</string>
+
+    <!-- Icon Management -->
+    <string name="icon_manage_title">App Icon</string>
+    <string name="icon_refetch">Refetch</string>
+    <string name="icon_refetching">Fetching...</string>
+    <string name="icon_refetch_success">Icon updated</string>
+    <string name="icon_refetch_failed">No icon found on site</string>
+    <string name="icon_custom_url">Custom Icon</string>
+    <string name="icon_custom_url_label">Image URL (SVG / PNG / WebP / ICO)</string>
+    <string name="icon_custom_url_placeholder">https://example.com/favicon.svg</string>
+    <string name="icon_apply">Apply</string>
+    <string name="icon_testing">Validating...</string>
+    <string name="icon_valid_success">Icon loaded successfully</string>
+    <string name="icon_valid_failed">Failed to load or decode image</string>
 </resources>

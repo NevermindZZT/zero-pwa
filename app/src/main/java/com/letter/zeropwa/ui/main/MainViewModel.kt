@@ -112,10 +112,52 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updatePwa(item: PwaItem) {
+    fun updatePwa(item: PwaItem, newIconUrl: String? = null, onComplete: ((Boolean) -> Unit)? = null) {
         viewModelScope.launch {
+            if (!newIconUrl.isNullOrBlank() && newIconUrl != item.iconUrl) {
+                val success = repository.updatePwaIconFromUrl(item.id, newIconUrl)
+                if (success) {
+                    val refreshed = repository.getById(item.id) ?: item
+                    repository.update(
+                        refreshed.copy(
+                            name = item.name,
+                            startUrl = item.startUrl,
+                            themeColor = item.themeColor,
+                            displayMode = item.displayMode,
+                            userAgentMode = item.userAgentMode,
+                            statusBarIconMode = item.statusBarIconMode,
+                            enableFloatingToolHandle = item.enableFloatingToolHandle,
+                            enableSplashScreen = item.enableSplashScreen,
+                            enableImmersiveStatusBar = item.enableImmersiveStatusBar,
+                            allowMultipleWindows = item.allowMultipleWindows,
+                            openExternalLinksInBrowser = item.openExternalLinksInBrowser,
+                            isPinnedToShortcuts = item.isPinnedToShortcuts
+                        )
+                    )
+                    onComplete?.invoke(true)
+                    return@launch
+                }
+            }
             repository.update(item)
+            onComplete?.invoke(true)
         }
+    }
+
+    suspend fun refetchIcon(targetUrl: String): String? {
+        val result = PwaManifestParser.inspectUrl(targetUrl)
+        val candidate = result.getOrNull() ?: return null
+        val urls = (listOfNotNull(candidate.iconUrl) + candidate.iconCandidates).distinct()
+        for (url in urls.take(8)) {
+            val bitmap = PwaManifestParser.downloadBitmap(getApplication(), url)
+            if (bitmap != null) return url
+        }
+        return null
+    }
+
+    suspend fun validateIconUrl(iconUrl: String): Boolean {
+        if (iconUrl.isBlank()) return false
+        val bitmap = PwaManifestParser.downloadBitmap(getApplication(), iconUrl)
+        return bitmap != null
     }
 
     fun deletePwa(pwaId: Long) {

@@ -166,6 +166,17 @@ class PwaRepository private constructor(private val context: Context) {
         file.absolutePath
     }
 
+    suspend fun updatePwaIconFromUrl(pwaId: Long, iconUrl: String): Boolean = withContext(Dispatchers.IO) {
+        val bitmap = com.letter.zeropwa.data.parser.PwaManifestParser.downloadBitmap(context, iconUrl) ?: return@withContext false
+        val localPath = saveIconBitmap(bitmap, pwaId)
+        val current = dbHelper.getById(pwaId) ?: return@withContext false
+        val updated = current.copy(iconPath = localPath, iconUrl = iconUrl)
+        dbHelper.update(updated)
+        refreshList()
+        PwaShortcutManager.updateDynamicShortcuts(context, _pwaList.value)
+        true
+    }
+
     fun loadIconBitmap(iconPath: String?): Bitmap? {
         if (iconPath.isNullOrBlank()) return null
         return try {

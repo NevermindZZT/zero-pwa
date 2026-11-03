@@ -160,4 +160,18 @@
     <string name="handle_close">收起工具</string>
     <string name="common_clear">清空</string>
     <string name="common_paste">粘贴</string>
+
+    <!-- Icon Management -->
+    <string name="icon_manage_title">应用图标</string>
+    <string name="icon_refetch">重新获取</string>
+    <string name="icon_refetching">正在获取...</string>
+    <string name="icon_refetch_success">图标重新获取成功</string>
+    <string name="icon_refetch_failed">未探测到可用图标</string>
+    <string name="icon_custom_url">自定义图标</string>
+    <string name="icon_custom_url_label">图标图片地址 (支持 SVG / PNG / WebP / ICO)</string>
+    <string name="icon_custom_url_placeholder">https://example.com/favicon.svg</string>
+    <string name="icon_apply">应用</string>
+    <string name="icon_testing">正在校验...</string>
+    <string name="icon_valid_success">图标校验成功</string>
+    <string name="icon_valid_failed">无法加载或解析该图片，请检查链接</string>
 </resources>

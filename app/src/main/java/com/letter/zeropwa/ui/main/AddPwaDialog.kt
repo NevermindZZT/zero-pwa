@@ -22,12 +22,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -53,7 +55,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
+import com.letter.zeropwa.data.parser.PwaManifestParser
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -97,8 +102,14 @@ fun AddPwaDialog(
     val clipboardManager = LocalClipboardManager.current
     var urlInput by remember { mutableStateOf("") }
 
+    val coroutineScope = rememberCoroutineScope()
     var editableName by remember { mutableStateOf("") }
     var selectedThemeColor by remember { mutableStateOf<Int?>(null) }
+    var selectedIconUrl by remember { mutableStateOf<String?>(null) }
+    var showCustomIconInput by remember { mutableStateOf(false) }
+    var customIconText by remember { mutableStateOf("") }
+    var isValidatingIcon by remember { mutableStateOf(false) }
+
     var selectedDisplayMode by remember { mutableStateOf(PwaItem.DISPLAY_STANDALONE) }
     var selectedUaMode by remember { mutableIntStateOf(PwaItem.UA_DEFAULT) }
     var selectedIconMode by remember { mutableIntStateOf(PwaItem.STATUS_BAR_ICON_AUTO) }
@@ -227,7 +238,11 @@ fun AddPwaDialog(
                     editableName = candidate.name
                     selectedDisplayMode = candidate.displayMode
                     selectedThemeColor = candidate.themeColor
+                    selectedIconUrl = candidate.iconUrl
                 }
+
+                val validSuccessMsg = stringResource(R.string.icon_valid_success)
+                val validFailedMsg = stringResource(R.string.icon_valid_failed)
 
                 // 网站信息预览卡片 (遵循 Material You 无阴影色调规范)
                 Card(
@@ -250,9 +265,9 @@ fun AddPwaDialog(
                     ) {
                         // 网站图标与主要标题行
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (!candidate.iconUrl.isNullOrBlank()) {
+                            if (!selectedIconUrl.isNullOrBlank()) {
                                 AsyncImage(
-                                    model = candidate.iconUrl,
+                                    model = selectedIconUrl,
                                     contentDescription = "App Icon",
                                     modifier = Modifier
                                         .size(60.dp)
@@ -313,6 +328,97 @@ fun AddPwaDialog(
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 自定义图标按钮
+                        FilledTonalButton(
+                            onClick = { showCustomIconInput = !showCustomIconInput },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(42.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                        ) {
+                            Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.icon_custom_url),
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1
+                            )
+                        }
+
+                        // 自定义图标展开输入
+                        if (showCustomIconInput) {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = customIconText,
+                                        onValueChange = { customIconText = it },
+                                        label = { Text(stringResource(R.string.icon_custom_url_label)) },
+                                        placeholder = { Text(stringResource(R.string.icon_custom_url_placeholder)) },
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        trailingIcon = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                if (customIconText.isNotBlank()) {
+                                                    IconButton(onClick = { customIconText = "" }) {
+                                                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.common_clear))
+                                                    }
+                                                }
+                                                IconButton(onClick = {
+                                                    val text = clipboardManager.getText()?.text.orEmpty().trim()
+                                                    if (text.isNotBlank()) customIconText = text
+                                                }) {
+                                                    Icon(Icons.Default.ContentPaste, contentDescription = stringResource(R.string.common_paste))
+                                                }
+                                            }
+                                        }
+                                    )
+
+                                    Button(
+                                        onClick = {
+                                            val trimmed = customIconText.trim()
+                                            if (trimmed.isBlank() || isValidatingIcon) return@Button
+                                            isValidatingIcon = true
+                                            coroutineScope.launch {
+                                                val bitmap = PwaManifestParser.downloadBitmap(context, trimmed)
+                                                isValidatingIcon = false
+                                                if (bitmap != null) {
+                                                    selectedIconUrl = trimmed
+                                                    showCustomIconInput = false
+                                                    Toast.makeText(context, validSuccessMsg, Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(context, validFailedMsg, Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        },
+                                        enabled = customIconText.isNotBlank() && !isValidatingIcon,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        if (isValidatingIcon) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp,
+                                                color = MaterialTheme.colorScheme.onPrimary
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(stringResource(R.string.icon_testing))
+                                        } else {
+                                            Text(stringResource(R.string.icon_apply))
                                         }
                                     }
                                 }
@@ -550,7 +656,7 @@ fun AddPwaDialog(
                 Button(
                     onClick = {
                         onConfirmAdd(
-                            candidate,
+                            candidate.copy(iconUrl = selectedIconUrl),
                             editableName.ifBlank { candidate.name },
                             selectedThemeColor,
                             selectedDisplayMode,
